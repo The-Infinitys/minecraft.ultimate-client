@@ -1,4 +1,5 @@
 package org.infinite.libs.features.category
 
-class LocalCategory {
-}
+import org.infinite.libs.features.Category
+
+class LocalCategory : Category()

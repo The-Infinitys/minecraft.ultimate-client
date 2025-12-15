@@ -1,4 +1,5 @@
 package org.infinite.libs.features.feature
 
-class LocalFeature {
-}
+import org.infinite.libs.features.Feature
+
+class LocalFeature : Feature()

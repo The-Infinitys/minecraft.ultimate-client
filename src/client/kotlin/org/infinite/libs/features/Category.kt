@@ -1,4 +1,3 @@
 package org.infinite.libs.features
 
-class Category {
-}
+open class Category

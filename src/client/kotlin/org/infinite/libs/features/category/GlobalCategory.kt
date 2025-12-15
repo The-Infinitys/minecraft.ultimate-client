@@ -1,4 +1,5 @@
 package org.infinite.libs.features.category
 
-class GlobalCategory {
-}
+import org.infinite.libs.features.Category
+
+class GlobalCategory : Category()

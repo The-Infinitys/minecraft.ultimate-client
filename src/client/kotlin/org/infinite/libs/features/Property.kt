@@ -1,4 +1,3 @@
 package org.infinite.libs.features
 
-class Property {
-}
+open class Property

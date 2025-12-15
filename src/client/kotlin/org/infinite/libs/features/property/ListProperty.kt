@@ -1,4 +1,5 @@
 package org.infinite.libs.features.property
 
-class ListProperty {
-}
+import org.infinite.libs.features.Property
+
+class ListProperty : Property()

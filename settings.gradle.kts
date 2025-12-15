@@ -16,9 +16,9 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-    val loom_version: String by settings
+    val loomVersion: String by settings
     plugins {
-        id("fabric-loom") version loom_version
+        id("fabric-loom") version loomVersion
         id("java")
         id("maven-publish")
         kotlin("jvm") version "2.3.0-Beta2"
@@ -30,4 +30,3 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 rootProject.name = "infinite"
-

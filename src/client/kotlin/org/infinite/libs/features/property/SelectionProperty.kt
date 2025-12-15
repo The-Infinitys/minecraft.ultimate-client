@@ -1,4 +1,5 @@
 package org.infinite.libs.features.property
 
-class SelectionProperty {
-}
+import org.infinite.libs.features.Property
+
+class SelectionProperty : Property()

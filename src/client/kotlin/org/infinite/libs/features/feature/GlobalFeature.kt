@@ -1,4 +1,5 @@
 package org.infinite.libs.features.feature
 
-class GlobalFeature {
-}
+import org.infinite.libs.features.Feature
+
+class GlobalFeature : Feature()

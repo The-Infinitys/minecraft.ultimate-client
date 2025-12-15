@@ -1,4 +1,5 @@
 package org.infinite.libs.features.property
 
-class NumberProperty {
-}
+import org.infinite.libs.features.Property
+
+class NumberProperty : Property()
