@@ -9,7 +9,7 @@ import org.infinite.libs.core.features.feature.GlobalFeature
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
-class GlobalCategory : Category<KClass<out GlobalFeature>, GlobalFeature>() {
+open class GlobalCategory : Category<KClass<out GlobalFeature>, GlobalFeature>() {
     override val features: ConcurrentHashMap<KClass<out GlobalFeature>, GlobalFeature> = ConcurrentHashMap()
 
     suspend fun onInitialized() =

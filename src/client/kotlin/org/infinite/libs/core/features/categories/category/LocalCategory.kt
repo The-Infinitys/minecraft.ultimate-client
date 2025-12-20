@@ -5,6 +5,6 @@ import org.infinite.libs.core.features.feature.LocalFeature
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
-class LocalCategory : Category<KClass<out LocalFeature>, LocalFeature>() {
+open class LocalCategory : Category<KClass<out LocalFeature>, LocalFeature>() {
     override val features: ConcurrentHashMap<KClass<out LocalFeature>, LocalFeature> = ConcurrentHashMap()
 }
