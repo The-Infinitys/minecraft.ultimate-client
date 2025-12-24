@@ -18,6 +18,11 @@ object RenderTicks {
     }
 
     fun onEndUiRendering(guiGraphics: GuiGraphics, deltaTracker: DeltaTracker) {
+        val commands = runBlocking {
+            return@runBlocking UltimateClient.localFeatureCategories.onEndUiRendering(deltaTracker)
+        }
+        val renderSystem2D = RenderSystem2D(guiGraphics)
+        renderSystem2D.render(commands)
     }
 
     fun onStartWorldRendering() {}

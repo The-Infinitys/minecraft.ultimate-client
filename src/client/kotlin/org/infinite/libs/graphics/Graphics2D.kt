@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
  */
 class Graphics2D(
     deltaTracker: DeltaTracker, // コンストラクタ引数としてのみ受け取る
-    private val zIndex: Int = 0
+    var zIndex: Int = 0
 ) {
     // インスタンス化された瞬間の値を不変(val)として保持
     private val capturedGameDelta: Float = deltaTracker.gameTimeDeltaTicks

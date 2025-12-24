@@ -128,4 +128,20 @@ class LocalFeatureCategories(categories: List<LocalCategory>) :
         }
         return globalCommandQueue.toList()
     }
+
+    suspend fun onEndUiRendering(deltaTracker: DeltaTracker): List<RenderCommand> {
+        val globalCommandQueue = PriorityBlockingQueue<RenderCommand>(512, compareBy { it.zIndex })
+        coroutineScope {
+            categories.values.map { category ->
+                async(Dispatchers.Default) {
+                    val queue = category.onEndUiRendering(deltaTracker)
+                    while (true) {
+                        val cmd = queue.poll() ?: break
+                        globalCommandQueue.add(cmd)
+                    }
+                }
+            }.awaitAll() // 全ての Feature の計算と統合が終わるのを待つ
+        }
+        return globalCommandQueue.toList()
+    }
 }
