@@ -10,15 +10,20 @@ import kotlin.math.roundToInt
  * MDN CanvasRenderingContext2D API を Minecraft GuiGraphics 上に再現するクラス
  */
 class Graphics2D(
-    deltaTracker: DeltaTracker, // コンストラクタ引数としてのみ受け取る
+    deltaTracker: DeltaTracker,
     var zIndex: Int = 0,
 ) {
-    // インスタンス化された瞬間の値を不変(val)として保持
     private val capturedGameDelta: Float = deltaTracker.gameTimeDeltaTicks
     private val capturedRealDelta: Float = deltaTracker.realtimeDeltaTicks
 
-    var strokeStyle: StrokeStyle? = null // 必要に応じて可変に
+    var strokeStyle: StrokeStyle? = null
+
+    // 塗りつぶしの色（Canvas API風に Int で管理）
+    var fillStyle: Int = 0xFFFFFFFF.toInt()
+
     private val commandQueue = PriorityBlockingQueue<RenderCommand>(100, compareBy { it.zIndex })
+
+    // --- strokeRect ---
 
     fun strokeRect(
         x: Int,
@@ -55,7 +60,37 @@ class Graphics2D(
         commandQueue.add(RenderCommand.DrawRectDouble(x, y, width, height, strokeWidth, strokeColor, zIndex))
     }
 
-    // 保存された値を返す（スレッド安全）
+    // --- fillRect ---
+
+    fun fillRect(
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+    ) {
+        commandQueue.add(RenderCommand.FillRectInt(x, y, width, height, fillStyle, zIndex))
+    }
+
+    fun fillRect(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+    ) {
+        commandQueue.add(RenderCommand.FillRectFloat(x, y, width, height, fillStyle, zIndex))
+    }
+
+    fun fillRect(
+        x: Double,
+        y: Double,
+        width: Double,
+        height: Double,
+    ) {
+        commandQueue.add(RenderCommand.FillRectDouble(x, y, width, height, fillStyle, zIndex))
+    }
+
+    // --- Utilities ---
+
     fun gameDelta(): Float = capturedGameDelta
 
     fun realDelta(): Float = capturedRealDelta
