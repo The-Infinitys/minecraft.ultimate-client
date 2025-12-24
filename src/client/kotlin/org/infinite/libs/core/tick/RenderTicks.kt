@@ -1,9 +1,24 @@
 package org.infinite.libs.core.tick
 
-object RenderTicks {
-    fun onStartUiRendering() {}
+import kotlinx.coroutines.runBlocking
+import net.minecraft.client.DeltaTracker
+import net.minecraft.client.gui.GuiGraphics
+import org.infinite.UltimateClient
+import org.infinite.libs.graphics.Graphics2D
+import org.infinite.libs.graphics.graphics2d.RenderSystem2D
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 
-    fun onEndUiRendering() {}
+object RenderTicks {
+    fun onStartUiRendering(guiGraphics: GuiGraphics, deltaTracker: DeltaTracker) {
+        val commands = runBlocking {
+            return@runBlocking UltimateClient.localFeatureCategories.onStartUiRendering(deltaTracker)
+        }
+        val renderSystem2D = RenderSystem2D(guiGraphics)
+        renderSystem2D.render(commands)
+    }
+
+    fun onEndUiRendering(guiGraphics: GuiGraphics, deltaTracker: DeltaTracker) {
+    }
 
     fun onStartWorldRendering() {}
 

@@ -2,6 +2,7 @@ package org.infinite.libs.core.features.feature
 
 import org.infinite.libs.core.TickInterface
 import org.infinite.libs.core.features.Feature
+import org.infinite.libs.graphics.Graphics2D
 
 open class LocalFeature :
     Feature(),
@@ -16,5 +17,13 @@ open class LocalFeature :
     }
 
     override fun onEndTick() {
+    }
+
+    open fun onStartUiRendering(graphics2D: Graphics2D): Graphics2D {
+        return graphics2D
+    }
+
+    open fun onEndUiRendering(graphics2D: Graphics2D): Graphics2D {
+        return graphics2D
     }
 }

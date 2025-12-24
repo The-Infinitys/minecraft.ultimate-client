@@ -1,290 +1,35 @@
 package org.infinite.libs.graphics
 
-import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.resources.Identifier
-import org.infinite.libs.graphics.graphics2d.CanvasStyle
-import org.infinite.libs.graphics.graphics2d.Enums.Direction
-import org.infinite.libs.graphics.graphics2d.Enums.FillRule
-import org.infinite.libs.graphics.graphics2d.Enums.ImageSmoothingQuality
-import org.infinite.libs.graphics.graphics2d.Enums.LineCap
-import org.infinite.libs.graphics.graphics2d.Enums.LineJoin
-import org.infinite.libs.graphics.graphics2d.Enums.Repetition
-import org.infinite.libs.graphics.graphics2d.Enums.TextAlign
-import org.infinite.libs.graphics.graphics2d.Enums.TextBaseline
-import org.infinite.libs.graphics.graphics2d.types.CanvasPattern
-import org.infinite.libs.graphics.graphics2d.types.ColorStyle
-import org.infinite.libs.graphics.graphics2d.types.LinearGradient
-import org.infinite.libs.graphics.graphics2d.types.RadialGradient
-import org.infinite.libs.graphics.graphics2d.types.TextMetrics
-import org.joml.Matrix4f
+import net.minecraft.client.DeltaTracker
+import org.infinite.libs.graphics.graphics2d.structs.RenderCommand
+import org.infinite.libs.graphics.graphics2d.structs.StrokeStyle
+import java.util.concurrent.PriorityBlockingQueue
+import kotlin.math.roundToInt
 
 /**
  * MDN CanvasRenderingContext2D API を Minecraft GuiGraphics 上に再現するクラス
  */
 class Graphics2D(
-    private val gui: GuiGraphics,
+    deltaTracker: DeltaTracker, // コンストラクタ引数としてのみ受け取る
+    private val zIndex: Int = 0
 ) {
-    // --- インスタンスプロパティ ---
+    // インスタンス化された瞬間の値を不変(val)として保持
+    private val capturedGameDelta: Float = deltaTracker.gameTimeDeltaTicks
+    private val capturedRealDelta: Float = deltaTracker.realtimeDeltaTicks
 
-    var fillStyle: CanvasStyle = ColorStyle(0xFF000000.toInt())
-    var strokeStyle: CanvasStyle = ColorStyle(0xFF000000.toInt())
-    var lineWidth: Float = 1.0f
-    var lineCap: LineCap = LineCap.Butt
-    var lineJoin: LineJoin = LineJoin.Miter
-    var miterLimit: Float = 10.0f
-    var lineDashOffset: Float = 0.0f
+    var strokeStyle: StrokeStyle? = null // 必要に応じて可変に
+    private val commandQueue = PriorityBlockingQueue<RenderCommand>(100, compareBy { it.zIndex })
 
-    var font: String = "10px sans-serif"
-    var textAlign: TextAlign = TextAlign.Start
-    var textBaseline: TextBaseline = TextBaseline.Alphabetic
-    var direction: Direction = Direction.Inherit
-
-    var globalAlpha: Float = 1.0f
-    var globalCompositeOperation: String = "source-over" // 複雑なためStringまたは専用Enum
-    var imageSmoothingEnabled: Boolean = true
-    var imageSmoothingQuality: ImageSmoothingQuality = ImageSmoothingQuality.Low
-
-    var shadowBlur: Float = 0.0f
-    var shadowColor: Int = 0x00000000
-    var shadowOffsetX: Float = 0.0f
-    var shadowOffsetY: Float = 0.0f
-
-    var filter: String = "none"
-
-    // --- メソッド ---
-
-    // 矩形
-    fun clearRect(
-        x: Double,
-        y: Double,
-        w: Double,
-        h: Double,
-    ) {}
-
-    fun fillRect(
-        x: Double,
-        y: Double,
-        w: Double,
-        h: Double,
-    ) {}
-
-    fun strokeRect(
-        x: Double,
-        y: Double,
-        w: Double,
-        h: Double,
-    ) {}
-
-    // テキスト
-    fun fillText(
-        text: String,
-        x: Double,
-        y: Double,
-        maxWidth: Double? = null,
-    ) {}
-
-    fun strokeText(
-        text: String,
-        x: Double,
-        y: Double,
-        maxWidth: Double? = null,
-    ) {}
-
-    fun measureText(text: String): TextMetrics = TextMetrics(0.0, 0.0, 0.0)
-
-    // 線のスタイル
-    fun getLineDash(): DoubleArray = doubleArrayOf()
-
-    fun setLineDash(segments: DoubleArray) {}
-
-    // グラデーションとパターン作成
-    fun createLinearGradient(
-        x0: Double,
-        y0: Double,
-        x1: Double,
-        y1: Double,
-    ): LinearGradient = LinearGradient(x0, y0, x1, y1)
-
-    fun createRadialGradient(
-        x0: Double,
-        y0: Double,
-        r0: Double,
-        x1: Double,
-        y1: Double,
-        r1: Double,
-    ): RadialGradient = RadialGradient(x0, y0, r0, x1, y1, r1)
-
-    fun createPattern(
-        image: Identifier,
-        repetition: Repetition,
-    ): CanvasPattern = CanvasPattern(image, repetition)
-
-    // パス作成
-    fun beginPath() {}
-
-    fun closePath() {}
-
-    fun moveTo(
-        x: Double,
-        y: Double,
-    ) {}
-
-    fun lineTo(
-        x: Double,
-        y: Double,
-    ) {}
-
-    fun bezierCurveTo(
-        cp1x: Double,
-        cp1y: Double,
-        cp2x: Double,
-        cp2y: Double,
-        x: Double,
-        y: Double,
-    ) {}
-
-    fun quadraticCurveTo(
-        cpx: Double,
-        cpy: Double,
-        x: Double,
-        y: Double,
-    ) {}
-
-    fun arc(
-        x: Double,
-        y: Double,
-        radius: Double,
-        startAngle: Double,
-        endAngle: Double,
-        counterclockwise: Boolean = false,
-    ) {
+    fun strokeRect(x: Int, y: Int, width: Int, height: Int) {
+        val style = strokeStyle ?: return
+        val (strokeColor, strokeWidthDouble) = style
+        val strokeWidth = strokeWidthDouble.roundToInt()
+        commandQueue.add(RenderCommand.DrawRectInt(x, y, width, height, strokeWidth, strokeColor, zIndex))
     }
 
-    fun arcTo(
-        x1: Double,
-        y1: Double,
-        x2: Double,
-        y2: Double,
-        radius: Double,
-    ) {}
+    // 保存された値を返す（スレッド安全）
+    fun gameDelta(): Float = capturedGameDelta
+    fun realDelta(): Float = capturedRealDelta
 
-    fun ellipse(
-        x: Double,
-        y: Double,
-        radiusX: Double,
-        radiusY: Double,
-        rotation: Double,
-        startAngle: Double,
-        endAngle: Double,
-        counterclockwise: Boolean = false,
-    ) {
-    }
-
-    fun rect(
-        x: Double,
-        y: Double,
-        w: Double,
-        h: Double,
-    ) {}
-
-    fun roundRect(
-        x: Double,
-        y: Double,
-        w: Double,
-        h: Double,
-        radii: DoubleArray,
-    ) {}
-
-    // パス描画
-    fun fill(fillRule: FillRule = FillRule.Nonzero) {}
-
-    fun stroke() {}
-
-    fun clip(fillRule: FillRule = FillRule.Nonzero) {}
-
-    fun isPointInPath(
-        x: Double,
-        y: Double,
-        fillRule: FillRule = FillRule.Nonzero,
-    ): Boolean = false
-
-    fun isPointInStroke(
-        x: Double,
-        y: Double,
-    ): Boolean = false
-
-    // 変形
-    fun rotate(angle: Double) {}
-
-    fun scale(
-        x: Double,
-        y: Double,
-    ) {}
-
-    fun translate(
-        x: Double,
-        y: Double,
-    ) {}
-
-    fun transform(
-        a: Double,
-        b: Double,
-        c: Double,
-        d: Double,
-        e: Double,
-        f: Double,
-    ) {}
-
-    fun getTransform(): Matrix4f = Matrix4f()
-
-    fun setTransform(
-        a: Double,
-        b: Double,
-        c: Double,
-        d: Double,
-        e: Double,
-        f: Double,
-    ) {}
-
-    fun setTransform(matrix: Matrix4f) {}
-
-    fun resetTransform() {}
-
-    // 画像
-    fun drawImage(
-        image: Identifier,
-        dx: Double,
-        dy: Double,
-    ) {}
-
-    fun drawImage(
-        image: Identifier,
-        dx: Double,
-        dy: Double,
-        dw: Double,
-        dh: Double,
-    ) {}
-
-    fun drawImage(
-        image: Identifier,
-        sx: Double,
-        sy: Double,
-        sw: Double,
-        sh: Double,
-        dx: Double,
-        dy: Double,
-        dw: Double,
-        dh: Double,
-    ) {
-    }
-
-    // 状態の保存
-    fun save() {}
-
-    fun restore() {}
-
-    // その他
-    fun reset() {}
-
-    fun isContextLost(): Boolean = false
+    fun poll(): RenderCommand? = commandQueue.poll()
 }
