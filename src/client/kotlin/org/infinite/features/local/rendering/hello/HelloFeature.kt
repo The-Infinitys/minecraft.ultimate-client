@@ -72,6 +72,31 @@ class HelloFeature : LocalFeature() {
         // 枠線の追加
         graphics2D.strokeStyle = StrokeStyle(0xFF000000.toInt(), 10.0f) // 黒い枠線
         graphics2D.strokeTriangle(x0, y0, x1, y1, x2, y2)
+// テスト用の線幅設定
+        graphics2D.strokeStyle = StrokeStyle(0xFFFFFFFF.toInt(), 5.0f)
+
+        // 1. グラデーション三角形の枠線
+        graphics2D.strokeTriangle(
+            50f, 150f,
+            20f, 200f,
+            80f, 200f,
+            0xFFFF0000.toInt(), // 赤
+            0xFF00FF00.toInt(), // 緑
+            0xFF0000FF.toInt(), // 青
+        )
+
+        // 2. グラデーション四角形の枠線
+        graphics2D.strokeQuad(
+            120f, 150f, // 左上
+            120f, 200f, // 左下
+            220f, 200f, // 右下
+            220f, 150f, // 右上
+            0xFF00FFFF.toInt(), // シアン
+            0xFFFF00FF.toInt(), // マゼンタ
+            0xFFFFFF00.toInt(), // イエロー
+            0xFFFFFFFF.toInt(), // 白
+        )
+
         return graphics2D
     }
 }

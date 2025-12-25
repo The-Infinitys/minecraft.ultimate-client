@@ -194,6 +194,48 @@ class Graphics2D(
         )
     }
 
+    fun strokeTriangle(
+        x0: Float,
+        y0: Float,
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        col0: Int,
+        col1: Int,
+        col2: Int,
+    ) {
+        val width = strokeStyle?.width ?: 1.0f
+
+        // 外積判定（前回のロジックを流用）
+        val crossProduct = (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0)
+
+        if (crossProduct < 0) {
+            // 時計回りの場合、反時計回りに反転して追加
+            commandQueue.add(RenderCommand.StrokeTriangle(x0, y0, x2, y2, x1, y1, width, col0, col2, col1))
+        } else {
+            commandQueue.add(RenderCommand.StrokeTriangle(x0, y0, x1, y1, x2, y2, width, col0, col1, col2))
+        }
+    }
+
+    fun strokeQuad(
+        x0: Float,
+        y0: Float,
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+        x3: Float,
+        y3: Float,
+        col0: Int,
+        col1: Int,
+        col2: Int,
+        col3: Int,
+    ) {
+        val width = strokeStyle?.width ?: 1.0f
+        commandQueue.add(RenderCommand.StrokeQuad(x0, y0, x1, y1, x2, y2, x3, y3, width, col0, col1, col2, col3))
+    }
+
     /**
      * 登録された順にコマンドを取り出します
      */

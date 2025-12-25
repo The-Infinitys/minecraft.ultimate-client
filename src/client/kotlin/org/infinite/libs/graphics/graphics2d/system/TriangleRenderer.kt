@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics
 import org.infinite.libs.graphics.graphics2d.minecraft.fillQuad
 import org.infinite.libs.graphics.graphics2d.minecraft.fillTriangle
 import org.infinite.libs.graphics.graphics2d.system.PointPair.Companion.calculateForMiter
+import kotlin.math.abs
 
 class TriangleRenderer(
     private val guiGraphics: GuiGraphics,
@@ -120,17 +121,22 @@ class TriangleRenderer(
         sInCol: Int,
         eInCol: Int,
         sOutCol: Int,
-        eOutCol: Int, // 外側の色も2点分受ける
+        eOutCol: Int,
     ) {
+        // 頂点の指定順序: 開始外 -> 終了外 -> 終了内 -> 開始内
+        // 色の指定順序もこれに完全に一致させる
         guiGraphics.fillQuad(
-            start.ox, start.oy, end.ox, end.oy, end.ix, end.iy, start.ix, start.iy,
-            sOutCol, eOutCol, eInCol, sInCol,
+            start.ox, start.oy, // 1: 外側・開始
+            end.ox, end.oy, // 2: 外側・終了
+            end.ix, end.iy, // 3: 内側・終了
+            start.ix, start.iy, // 4: 内側・開始
+            sOutCol, // 1に対応
+            eOutCol, // 2に対応
+            eInCol, // 3に対応
+            sInCol, // 4に対応
         )
     }
 
-    /**
-     * 重心座標系を用いた厳密な色補間
-     */
     private fun lerpColorInTriangle(
         px: Float,
         py: Float,
@@ -145,19 +151,39 @@ class TriangleRenderer(
         c2: Int,
     ): Int {
         val denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
-        if (denom == 0f) return c0
+        // 縮退した三角形（面積0）の場合は安全にc0を返す
+        if (abs(denom) < 1e-6f) return c0
 
-        // 重心座標 (w0, w1, w2) の計算
         val w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
         val w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
         val w2 = 1f - w0 - w1
 
-        // 各成分を線形補間して合成
-        val a = (c0 ushr 24) * w0 + (c1 ushr 24) * w1 + (c2 ushr 24) * w2
-        val r = ((c0 shr 16) and 0xFF) * w0 + ((c1 shr 16) and 0xFF) * w1 + ((c2 shr 16) and 0xFF) * w2
-        val g = ((c0 shr 8) and 0xFF) * w0 + ((c1 shr 8) and 0xFF) * w1 + ((c2 shr 8) and 0xFF) * w2
-        val b = (c0 and 0xFF) * w0 + (c1 and 0xFF) * w1 + (c2 and 0xFF) * w2
+        // 0.0〜1.0にクランプ（浮動小数点の誤差対策）
+        val cw0 = w0.coerceIn(0f, 1f)
+        val cw1 = w1.coerceIn(0f, 1f)
+        val cw2 = w2.coerceIn(0f, 1f)
 
-        return (a.toInt() shl 24) or (r.toInt() shl 16) or (g.toInt() shl 8) or b.toInt()
+        // アルファ値を安全に抽出 (0xFFL と Long を使うことで符号付きIntのバグを回避)
+        val a0 = (c0 shr 24 and 0xFF).toFloat()
+        val r0 = (c0 shr 16 and 0xFF).toFloat()
+        val g0 = (c0 shr 8 and 0xFF).toFloat()
+        val b0 = (c0 and 0xFF).toFloat()
+
+        val a1 = (c1 shr 24 and 0xFF).toFloat()
+        val r1 = (c1 shr 16 and 0xFF).toFloat()
+        val g1 = (c1 shr 8 and 0xFF).toFloat()
+        val b1 = (c1 and 0xFF).toFloat()
+
+        val a2 = (c2 shr 24 and 0xFF).toFloat()
+        val r2 = (c2 shr 16 and 0xFF).toFloat()
+        val g2 = (c2 shr 8 and 0xFF).toFloat()
+        val b2 = (c2 and 0xFF).toFloat()
+
+        val a = (a0 * cw0 + a1 * cw1 + a2 * cw2).toInt()
+        val r = (r0 * cw0 + r1 * cw1 + r2 * cw2).toInt()
+        val g = (g0 * cw0 + g1 * cw1 + g2 * cw2).toInt()
+        val b = (b0 * cw0 + b1 * cw1 + b2 * cw2).toInt()
+
+        return (a shl 24) or (r shl 16) or (g shl 8) or b
     }
 }
