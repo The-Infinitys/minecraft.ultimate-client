@@ -1,16 +1,12 @@
 package org.infinite.libs.core.features.categories.category
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.minecraft.client.DeltaTracker
 import org.infinite.libs.core.features.Category
 import org.infinite.libs.core.features.feature.LocalFeature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.graphics2d.structs.RenderCommand
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.PriorityBlockingQueue
 import kotlin.reflect.KClass
@@ -18,91 +14,90 @@ import kotlin.reflect.KClass
 open class LocalCategory : Category<KClass<out LocalFeature>, LocalFeature>() {
     override val features: ConcurrentHashMap<KClass<out LocalFeature>, LocalFeature> = ConcurrentHashMap()
 
-    /**
-     * サーバー接続時：配下の全 LocalFeature を並列初期化
-     */
-    suspend fun onConnected() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onConnected()
-                    }
-                }.joinAll()
-        }
+    // 有効なFeatureのみをフィルタリングするヘルパー
+    private fun enabledFeatures() = features.values.filter { it.isEnabled() }
 
-    /**
-     * サーバー切断時：配下の全 LocalFeature の終了処理を並列実行
-     */
-    suspend fun onDisconnected() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onDisconnected()
-                    }
-                }.joinAll()
-        }
-
-    suspend fun onStartTick() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onStartTick()
-                    }
-                }.joinAll()
-        }
-
-    suspend fun onEndTick() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onEndTick()
-                    }
-                }.joinAll()
-        }
-
-    suspend fun onStartUiRendering(deltaTracker: DeltaTracker): PriorityBlockingQueue<RenderCommand> {
-        val globalCommandQueue = PriorityBlockingQueue<RenderCommand>(256, compareBy { it.zIndex })
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    async(Dispatchers.Default) {
-                        val graphics2D = Graphics2D(deltaTracker)
-                        feature.onStartUiRendering(graphics2D)
-
-                        // 2. この feature の計算が終わったら、統合キューへ全命令を移送する
-                        // poll() を使って全件抽出
-                        while (true) {
-                            val cmd = graphics2D.poll() ?: break
-                            globalCommandQueue.add(cmd)
-                        }
-                    }
-                }.awaitAll() // 全ての Feature の計算と統合が終わるのを待つ
-        }
-        return globalCommandQueue
+    suspend fun onConnected() = coroutineScope {
+        enabledFeatures().map { launch(Dispatchers.Default) { it.onConnected() } }.joinAll()
     }
 
-    suspend fun onEndUiRendering(deltaTracker: DeltaTracker): PriorityBlockingQueue<RenderCommand> {
-        val globalCommandQueue = PriorityBlockingQueue<RenderCommand>(256, compareBy { it.zIndex })
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    async(Dispatchers.Default) {
-                        val graphics2D = Graphics2D(deltaTracker)
-                        feature.onEndUiRendering(graphics2D)
-
-                        // 2. この feature の計算が終わったら、統合キューへ全命令を移送する
-                        // poll() を使って全件抽出
-                        while (true) {
-                            val cmd = graphics2D.poll() ?: break
-                            globalCommandQueue.add(cmd)
-                        }
-                    }
-                }.awaitAll() // 全ての Feature の計算と統合が終わるのを待つ
-        }
-        return globalCommandQueue
+    suspend fun onDisconnected() = coroutineScope {
+        enabledFeatures().map { launch(Dispatchers.Default) { it.onDisconnected() } }.joinAll()
     }
+
+    suspend fun onStartTick() = coroutineScope {
+        enabledFeatures().map { launch(Dispatchers.Default) { it.onStartTick() } }.joinAll()
+    }
+
+    suspend fun onEndTick() = coroutineScope {
+        enabledFeatures().map { launch(Dispatchers.Default) { it.onEndTick() } }.joinAll()
+    }
+
+    /**
+     * UIレンダリングコマンドの収集と整理
+     */
+    suspend fun onStartUiRendering(deltaTracker: DeltaTracker): LinkedList<Pair<Int, List<RenderCommand>>> {
+        return collectAndGroupRenderCommands(deltaTracker) { feature, graphics ->
+            feature.onStartUiRendering(graphics)
+            feature.renderPriority.start // start優先度を使用
+        }
+    }
+
+    suspend fun onEndUiRendering(deltaTracker: DeltaTracker): LinkedList<Pair<Int, List<RenderCommand>>> {
+        return collectAndGroupRenderCommands(deltaTracker) { feature, graphics ->
+            feature.onEndUiRendering(graphics)
+            feature.renderPriority.end // end優先度を使用
+        }
+    }
+
+    /**
+     * 共通ロジック：Featureからコマンドを集め、優先度ごとにグループ化する
+     */
+    private suspend fun collectAndGroupRenderCommands(
+        deltaTracker: DeltaTracker,
+        block: (LocalFeature, Graphics2D) -> Int,
+    ): LinkedList<Pair<Int, List<RenderCommand>>> {
+        // 1. 各Featureからコマンドを並列収集 (zIndexとしてpriorityを保持)
+        val tempQueue = PriorityBlockingQueue<InternalCommandWrapper>(256, compareBy { it.priority })
+
+        coroutineScope {
+            enabledFeatures().map { feature ->
+                async(Dispatchers.Default) {
+                    val graphics2D = Graphics2D(deltaTracker)
+                    val priority = block(feature, graphics2D)
+
+                    val commands = mutableListOf<RenderCommand>()
+                    while (true) {
+                        commands.add(graphics2D.poll() ?: break)
+                    }
+
+                    if (commands.isNotEmpty()) {
+                        tempQueue.add(InternalCommandWrapper(priority, commands))
+                    }
+                }
+            }.awaitAll()
+        }
+
+        // 2. 優先度ごとにグループ化して LinkedList に変換
+        val result = LinkedList<Pair<Int, List<RenderCommand>>>()
+
+        while (tempQueue.isNotEmpty()) {
+            val wrapper = tempQueue.poll() ?: break
+            // 同じ優先度のものが既に最後尾にあれば結合、なければ新規追加
+            if (result.isNotEmpty() && result.last().first == wrapper.priority) {
+                val lastEntry = result.removeLast()
+                result.add(lastEntry.first to (lastEntry.second + wrapper.commands))
+            } else {
+                result.add(wrapper.priority to wrapper.commands)
+            }
+        }
+
+        return result
+    }
+
+    // 内部ソート用のラッパー
+    private data class InternalCommandWrapper(
+        val priority: Int,
+        val commands: List<RenderCommand>,
+    )
 }

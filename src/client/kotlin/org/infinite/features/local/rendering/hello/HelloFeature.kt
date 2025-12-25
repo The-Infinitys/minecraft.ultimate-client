@@ -18,8 +18,6 @@ class HelloFeature : LocalFeature() {
     }
 
     override fun onStartUiRendering(graphics2D: Graphics2D): Graphics2D {
-        // --- 1. 基本的な矩形と塗りつぶし (RectRenderer) ---
-        graphics2D.zIndex = 10
         graphics2D.fillStyle = 0x80FF0000.toInt() // 半透明の赤
         graphics2D.fillRect(10f, 10f, 100f, 50f)
 
@@ -27,7 +25,6 @@ class HelloFeature : LocalFeature() {
         graphics2D.strokeRect(10f, 10f, 100f, 50f)
 
         // --- 2. グラデーション三角形 (TriangleRenderer) ---
-        graphics2D.zIndex = 20
         graphics2D.fillTriangle(
             150f, 20f, // 頂点0 (上)
             120f, 80f, // 頂点1 (左下)
@@ -40,8 +37,6 @@ class HelloFeature : LocalFeature() {
         graphics2D.strokeStyle = StrokeStyle(0xFFFFFFFF.toInt(), 1.0f)
         graphics2D.strokeTriangle(150f, 20f, 120f, 80f, 180f, 80f)
 
-        // --- 3. グラデーション四角形 (QuadRenderer) ---
-        graphics2D.zIndex = 15
         graphics2D.fillQuad(
             200f, 20f, // 左上
             220f, 80f, // 左下
@@ -69,8 +64,6 @@ class HelloFeature : LocalFeature() {
         val y1 = (centerY + radius * sin(time + 2.094)).toFloat()
         val x2 = (centerX + radius * cos(time + 4.188)).toFloat()
         val y2 = (centerY + radius * sin(time + 4.188)).toFloat()
-
-        graphics2D.zIndex = 30
 
         // 塗りつぶし
         graphics2D.fillStyle = 0xFFFFA500.toInt() // オレンジ

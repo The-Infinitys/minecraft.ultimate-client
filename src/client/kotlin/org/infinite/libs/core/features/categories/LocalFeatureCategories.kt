@@ -1,22 +1,13 @@
 package org.infinite.libs.core.features.categories
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import net.minecraft.client.DeltaTracker
 import org.infinite.libs.core.features.FeatureCategories
 import org.infinite.libs.core.features.categories.category.LocalCategory
 import org.infinite.libs.core.features.feature.LocalFeature
 import org.infinite.libs.graphics.graphics2d.structs.RenderCommand
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.PriorityBlockingQueue
 import kotlin.reflect.KClass
 
 class LocalFeatureCategories(
@@ -24,74 +15,49 @@ class LocalFeatureCategories(
 ) : FeatureCategories<KClass<out LocalFeature>, LocalFeature, KClass<out LocalCategory>, LocalCategory>() {
     override val categories: ConcurrentHashMap<KClass<out LocalCategory>, LocalCategory> = ConcurrentHashMap()
 
-    // 接続ごとに作り直すためのスコープ。初期値は null または空のスコープ
     private var connectionScope: CoroutineScope? = null
 
     init {
         categories.forEach { insert(it) }
     }
 
-    /**
-     * サーバー接続時の処理（非同期・並列）
-     */
-    fun onConnected() {
-        // 1. もし前の接続が残っていたらキャンセルして掃除する
-        connectionScope?.cancel()
+    // --- ライフサイクルメソッド (onConnected, onDisconnected等は変更なし) ---
 
-        // 2. 新しい接続用のスコープを作成
+    fun onConnected() {
+        connectionScope?.cancel()
         val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
         connectionScope = scope
-
-        // 3. 並列で初期化を実行
         scope.launch {
             try {
-                categories.values
-                    .map { category ->
-                        launch { category.onConnected() }
-                    }.joinAll()
+                categories.values.map { launch { it.onConnected() } }.joinAll()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    /**
-     * サーバー切断時の処理（同期待機）
-     */
     fun onDisconnected() {
-        // 1. 現在進行中の処理（onConnectedなど）をすべて即座に止める
         connectionScope?.cancel()
         connectionScope = null
-
-        // 2. 終了処理を確実に終わらせるために runBlocking を使用
         runBlocking(Dispatchers.Default) {
-            categories.values
-                .map { category ->
-                    launch {
-                        try {
-                            category.onDisconnected()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+            categories.values.map { category ->
+                launch {
+                    try {
+                        category.onDisconnected()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                }.joinAll()
+                }
+            }.joinAll()
         }
     }
 
-    /**
-     * マイクラ終了時
-     */
-    fun onShutdown() {
-        onDisconnected()
-    }
+    fun onShutdown() = onDisconnected()
 
     fun onStartTick() {
         connectionScope?.launch {
             try {
-                categories.values
-                    .map { category ->
-                        launch { category.onStartTick() }
-                    }.joinAll()
+                categories.values.map { launch { it.onStartTick() } }.joinAll()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -101,10 +67,7 @@ class LocalFeatureCategories(
     fun onEndTick() {
         connectionScope?.launch {
             try {
-                categories.values
-                    .map { category ->
-                        launch { category.onEndTick() }
-                    }.joinAll()
+                categories.values.map { launch { it.onEndTick() } }.joinAll()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -112,39 +75,44 @@ class LocalFeatureCategories(
     }
 
     /**
-     * UIレンダリング開始時に、その場限りのスコープで全カテゴリーの命令を収集する
+     * UIレンダリング: 全カテゴリーの命令を収集し、優先度順に並べ替えて一つのリストにする
      */
     suspend fun onStartUiRendering(deltaTracker: DeltaTracker): List<RenderCommand> {
-        val globalCommandQueue = PriorityBlockingQueue<RenderCommand>(512, compareBy { it.zIndex })
-        coroutineScope {
-            categories.values
-                .map { category ->
-                    async(Dispatchers.Default) {
-                        val queue = category.onStartUiRendering(deltaTracker)
-                        while (true) {
-                            val cmd = queue.poll() ?: break
-                            globalCommandQueue.add(cmd)
-                        }
-                    }
-                }.awaitAll() // 全ての Feature の計算と統合が終わるのを待つ
-        }
-        return globalCommandQueue.toList()
+        return mergeCategoriesRendering { it.onStartUiRendering(deltaTracker) }
     }
 
     suspend fun onEndUiRendering(deltaTracker: DeltaTracker): List<RenderCommand> {
-        val globalCommandQueue = PriorityBlockingQueue<RenderCommand>(512, compareBy { it.zIndex })
-        coroutineScope {
-            categories.values
-                .map { category ->
-                    async(Dispatchers.Default) {
-                        val queue = category.onEndUiRendering(deltaTracker)
-                        while (true) {
-                            val cmd = queue.poll() ?: break
-                            globalCommandQueue.add(cmd)
-                        }
-                    }
-                }.awaitAll() // 全ての Feature の計算と統合が終わるのを待つ
+        return mergeCategoriesRendering { it.onEndUiRendering(deltaTracker) }
+    }
+
+    /**
+     * 内部共通ロジック: カテゴリーを跨いで優先度グループを統合する
+     */
+    private suspend fun mergeCategoriesRendering(
+        fetchBlock: suspend (LocalCategory) -> LinkedList<Pair<Int, List<RenderCommand>>>,
+    ): List<RenderCommand> = coroutineScope {
+        // 1. 各カテゴリーから (Priority -> Commands) のリストを並列取得
+        val deferredResults = categories.values.map { category ->
+            async(Dispatchers.Default) { fetchBlock(category) }
+        }.awaitAll()
+
+        // 2. 全カテゴリーの結果を Priority をキーに統合する
+        // TreeMap を使うことで自動的に Priority (Int) 順にソートされる
+        val sortedMap = TreeMap<Int, MutableList<RenderCommand>>()
+
+        for (categoryResult in deferredResults) {
+            for ((priority, commands) in categoryResult) {
+                sortedMap.getOrPut(priority) { mutableListOf() }.addAll(commands)
+            }
         }
-        return globalCommandQueue.toList()
+
+        // 3. 優先度の低い順にフラットなリストへ変換
+        // TreeMap.values はキーの昇順で反復される
+        val finalCommands = mutableListOf<RenderCommand>()
+        for (commandsInPriority in sortedMap.values) {
+            finalCommands.addAll(commandsInPriority)
+        }
+
+        finalCommands
     }
 }

@@ -1,7 +1,6 @@
 package org.infinite.libs.graphics.graphics2d.structs
 
 sealed interface RenderCommand {
-    val zIndex: Int
 
     // 矩形の枠線
     data class StrokeRect(
@@ -11,7 +10,6 @@ sealed interface RenderCommand {
         val height: Float,
         val strokeWidth: Float,
         val color: Int,
-        override val zIndex: Int,
     ) : RenderCommand
 
     // 矩形の塗りつぶし
@@ -21,7 +19,6 @@ sealed interface RenderCommand {
         val width: Float,
         val height: Float,
         val color: Int,
-        override val zIndex: Int,
     ) : RenderCommand
 
     // 四角形の塗りつぶし
@@ -38,7 +35,6 @@ sealed interface RenderCommand {
         val col1: Int,
         val col2: Int,
         val col3: Int,
-        override val zIndex: Int,
     ) : RenderCommand
 
     /**
@@ -55,7 +51,6 @@ sealed interface RenderCommand {
         val y3: Float,
         val strokeWidth: Float,
         val color: Int,
-        override val zIndex: Int,
     ) : RenderCommand
 
     // 三角形の塗りつぶし
@@ -69,7 +64,6 @@ sealed interface RenderCommand {
         val col0: Int,
         val col1: Int,
         val col2: Int,
-        override val zIndex: Int,
     ) : RenderCommand
 
     /**
@@ -84,6 +78,5 @@ sealed interface RenderCommand {
         val y2: Float,
         val strokeWidth: Float,
         val color: Int,
-        override val zIndex: Int,
     ) : RenderCommand
 }
