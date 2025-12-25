@@ -29,14 +29,12 @@ data class PointPair(val ix: Float, val iy: Float, val ox: Float, val oy: Float)
             // 2. 各辺の法線ベクトル（画面座標系では右手系なので、90度右回転）
             // 法線 = (-y, x) で時計回りに90度回転
             val n1x = -v1y
-            val n1y = v1x
 
             val n2x = -v2y
-            val n2y = v2x
 
             // 3. Miterベクトル = 2つの法線の和
             val miterX = n1x + n2x
-            val miterY = n1y + n2y
+            val miterY = v1x + v2x
             val mLenSq = miterX * miterX + miterY * miterY
 
             // 4. miterベクトルをどれだけ伸ばすか計算
@@ -46,14 +44,14 @@ data class PointPair(val ix: Float, val iy: Float, val ox: Float, val oy: Float)
                 // 180度のコーナー（折り返し）の場合
                 return PointPair(
                     ix = currX + n1x * halfWidth,
-                    iy = currY + n1y * halfWidth,
+                    iy = currY + v1x * halfWidth,
                     ox = currX - n1x * halfWidth,
-                    oy = currY - n1y * halfWidth,
+                    oy = currY - v1x * halfWidth,
                 )
             }
 
             val mLen = sqrt(mLenSq)
-            val dot = miterX * n1x + miterY * n1y // 正しい内積
+            val dot = miterX * n1x + miterY * v1x // 正しい内積
             val scale = halfWidth / (dot / mLen)
 
             val finalMiterX = (miterX / mLen) * scale

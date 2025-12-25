@@ -84,10 +84,9 @@ class RenderSystem2D(
             }
 
             is RenderCommand.StrokeQuad -> {
-                val isSingleIn = allEqual(command.col0, command.col1, command.col2, command.col3)
-                val isSingleOut =
+                val isAllEqual =
                     allEqual(command.col0, command.col1, command.col2, command.col3)
-                if (isSingleIn && isSingleOut) {
+                if (isAllEqual) {
                     quadRenderer.strokeQuad(
                         command.x0, command.y0, command.x1, command.y1, command.x2, command.y2, command.x3, command.y3,
                         command.col0, command.strokeWidth,

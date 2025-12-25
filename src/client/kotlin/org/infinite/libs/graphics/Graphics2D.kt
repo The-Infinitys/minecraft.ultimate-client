@@ -45,6 +45,32 @@ class Graphics2D(
         )
     }
 
+    fun strokeRect(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        col0: Int,
+        col1: Int,
+        col2: Int,
+        col3: Int,
+    ) {
+        val style = strokeStyle ?: return
+        val (_, strokeWidth) = style
+        commandQueue.add(
+            RenderCommand.StrokeRect(
+                x,
+                y,
+                width,
+                height,
+                strokeWidth,
+                col0,
+                col1,
+                col2,
+                col3,
+            ),
+        )
+    }
     // --- fillRect ---
 
     fun fillRect(x: Float, y: Float, width: Float, height: Float) {

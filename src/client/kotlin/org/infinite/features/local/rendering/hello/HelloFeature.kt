@@ -85,18 +85,32 @@ class HelloFeature : LocalFeature() {
             0xFF0000FF.toInt(), // 青
         )
 
-        // 2. グラデーション四角形の枠線
+        graphics2D.strokeStyle = StrokeStyle(0xFFFFFFFF.toInt(), 2.0f)
+        graphics2D.strokeRect(200f, 20f, 80f, 70f) // 塗りつぶしなしの枠のみ
+
+        // --- 3. 変形・移動させた strokeQuad ---
+        // 座標を右側にずらし(x + 150)、形をより歪ませています
+        graphics2D.strokeStyle = StrokeStyle(0xFFFFFFFF.toInt(), 25.0f)
         graphics2D.strokeQuad(
-            120f, 150f, // 左上
-            120f, 200f, // 左下
-            220f, 200f, // 右下
-            220f, 150f, // 右上
+            350f, 20f, // 左上 (少し右へ)
+            330f, 100f, // 左下 (より下へ)
+            480f, 120f, // 右下 (大きく右下へ)
+            450f, 10f, // 右上 (鋭角に)
             0xFF00FFFF.toInt(), // シアン
             0xFFFF00FF.toInt(), // マゼンタ
             0xFFFFFF00.toInt(), // イエロー
             0xFFFFFFFF.toInt(), // 白
         )
-
+        graphics2D.strokeRect(
+            200f,
+            200f,
+            80f,
+            70f,
+            0xFF000000.toInt(),
+            0xFF0000FF.toInt(),
+            0xFF00FFFF.toInt(),
+            0xFFFFFFFF.toInt(),
+        )
         return graphics2D
     }
 }
