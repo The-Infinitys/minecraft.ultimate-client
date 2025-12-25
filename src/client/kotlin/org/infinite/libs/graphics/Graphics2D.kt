@@ -3,6 +3,7 @@ package org.infinite.libs.graphics
 import net.minecraft.client.DeltaTracker
 import org.infinite.libs.graphics.graphics2d.structs.RenderCommand
 import org.infinite.libs.graphics.graphics2d.structs.StrokeStyle
+import org.infinite.libs.interfaces.MinecraftInterface
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
@@ -11,10 +12,11 @@ import java.util.concurrent.LinkedBlockingQueue
  */
 class Graphics2D(
     deltaTracker: DeltaTracker,
-) {
-    private val capturedGameDelta: Float = deltaTracker.gameTimeDeltaTicks
-    private val capturedRealDelta: Float = deltaTracker.realtimeDeltaTicks
-
+) : MinecraftInterface() {
+    val gameDelta: Float = deltaTracker.gameTimeDeltaTicks
+    val realDelta: Float = deltaTracker.realtimeDeltaTicks
+    val width: Int = client?.window?.guiScaledWidth ?: 200
+    val height: Int = client?.window?.guiScaledHeight ?: 150
     var strokeStyle: StrokeStyle? = null
     var fillStyle: Int = 0xFFFFFFFF.toInt()
 
@@ -125,11 +127,6 @@ class Graphics2D(
             ),
         )
     }
-
-    // --- Utilities ---
-
-    fun gameDelta(): Float = capturedGameDelta
-    fun realDelta(): Float = capturedRealDelta
 
     /**
      * 登録された順にコマンドを取り出します

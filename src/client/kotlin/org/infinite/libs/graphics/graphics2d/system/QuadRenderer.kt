@@ -38,18 +38,22 @@ class QuadRenderer(
     ) {
         val halfWidth = strokeWidth / 2f
 
-        // 1. 中心座標（重心）を計算
-        val cx = (x0 + x1 + x2 + x3) / 4f
-        val cy = (y0 + y1 + x2 + x3) / 4f // ※y2, y3 のタイポ修正
+        val calcCorner = { tx: Float, ty: Float, px: Float, py: Float, nx: Float, ny: Float ->
+            // cx, cy を隣接点の中点として算出
+            val cx = (tx + px + nx) / 3f
+            val cy = (ty + py + ny) / 3f
+            calculateOffsets(tx, ty, cx, cy, halfWidth)
+        }
 
-        // 2. 各頂点について、中心からの方向ベクトルを正規化して内外の点を求める
-        // (innerX, innerY), (outerX, outerY)
-        val p0 = calculateOffsets(x0, y0, cx, cy, halfWidth)
-        val p1 = calculateOffsets(x1, y1, cx, cy, halfWidth)
-        val p2 = calculateOffsets(x2, y2, cx, cy, halfWidth)
-        val p3 = calculateOffsets(x3, y3, cx, cy, halfWidth)
+        // 2. 各頂点の PointPair (内側・外側の座標セット) を取得
+        val p0 = calcCorner(x0, y0, x3, y3, x1, y1) // 頂点0 (隣接: 3, 1)
+        val p1 = calcCorner(x1, y1, x0, y0, x2, y2) // 頂点1 (隣接: 0, 2)
+        val p2 = calcCorner(x2, y2, x1, y1, x3, y3) // 頂点2 (隣接: 1, 3)
+        val p3 = calcCorner(x3, y3, x2, y2, x0, y0) // 頂点3 (隣接: 2, 0)
 
-        // 3. 4つの「辺」をそれぞれ fillQuad で描画 (計8座標を使用)
+        // 3. 4つの「辺」をそれぞれ描画
+        // 各辺は、隣り合う頂点の「外側(ox, oy)」と「内側(ix, iy)」の計4点で構成される矩形
+
         // 辺 0-1
         fillQuad(p0.ox, p0.oy, p0.ix, p0.iy, p1.ix, p1.iy, p1.ox, p1.oy, color)
         // 辺 1-2
