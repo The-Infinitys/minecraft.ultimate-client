@@ -136,7 +136,7 @@ object ConfigManager : MinecraftInterface() {
 
     private fun getLocalPath(): String? {
         val client = client ?: return null
-    val isLocalServer = client.isLocalServer
+        val isLocalServer = client.isLocalServer
         val serverName = if (isLocalServer) {
             val server = client.singleplayerServer ?: return null
             server.storageSource.levelId
