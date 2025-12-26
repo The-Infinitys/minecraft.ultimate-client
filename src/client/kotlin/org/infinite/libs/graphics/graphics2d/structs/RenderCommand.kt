@@ -1,7 +1,5 @@
 package org.infinite.libs.graphics.graphics2d.structs
 
-import net.minecraft.client.gui.Font
-
 sealed interface RenderCommand {
     // 矩形の塗りつぶし
     data class FillRect(
@@ -45,7 +43,7 @@ sealed interface RenderCommand {
     ) : RenderCommand
 
     data class Text(
-        val font: Font,
+        val font: String,
         val text: String,
         val x: Float,
         val y: Float,
@@ -54,7 +52,7 @@ sealed interface RenderCommand {
         val size: Float,
     ) : RenderCommand
     data class TextCentered(
-        val font: Font,
+        val font: String,
         val text: String,
         val x: Float,
         val y: Float,

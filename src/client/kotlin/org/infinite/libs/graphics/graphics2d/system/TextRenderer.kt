@@ -2,11 +2,22 @@ package org.infinite.libs.graphics.graphics2d.system
 
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
+import org.infinite.libs.graphics.graphics2d.text.IModernFontManager
+import org.infinite.libs.graphics.text.fromFontSet
 import org.infinite.libs.interfaces.MinecraftInterface
+import org.infinite.mixin.graphics.MinecraftAccessor
 
 class TextRenderer(private val guiGraphics: GuiGraphics) : MinecraftInterface() {
-    fun text(font: Font, text: String, x: Float, y: Float, color: Int, size: Float = 8.0f, shadow: Boolean = false) {
+    private fun font(name: String): Font {
+        val client = client as MinecraftAccessor
+        val fontManager = client.fontManager as IModernFontManager
+        val fontSet = fontManager.`ultimate$fontSetFromIdentifier`(name)
+        return fromFontSet(fontSet)
+    }
+
+    fun text(font: String, text: String, x: Float, y: Float, color: Int, size: Float = 8.0f, shadow: Boolean = false) {
         val poseStack = guiGraphics.pose()
+        val font = font(font)
         poseStack.pushMatrix()
 
         poseStack.translate(x, y)
@@ -20,7 +31,7 @@ class TextRenderer(private val guiGraphics: GuiGraphics) : MinecraftInterface() 
     }
 
     fun textCentered(
-        font: Font,
+        font: String,
         text: String,
         x: Float,
         y: Float,
@@ -28,8 +39,10 @@ class TextRenderer(private val guiGraphics: GuiGraphics) : MinecraftInterface() 
         size: Float = 8.0f,
         shadow: Boolean = false,
     ) {
+        val fontStr = font
+        val font = font(fontStr)
         val scale = size / client.font.lineHeight
         val width = font.width(text) * scale
-        text(font, text, x - width / 2, y - size / 2, color, size, shadow)
+        text(fontStr, text, x - width / 2, y - size / 2, color, size, shadow)
     }
 }

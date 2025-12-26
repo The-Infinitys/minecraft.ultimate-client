@@ -5,6 +5,12 @@
   "client": [
     "core.MinecraftMixin",
     "core.multiplayer.ClientLevelMixin",
+    "graphics.FontManagerAccessor",
+    "graphics.FontManagerMixin",
+    "graphics.GuiGraphicsAccessor",
+    "graphics.GuiGraphicsMixin",
+    "graphics.MinecraftAccessor",
+    "graphics.MinecraftMixin",
     "graphics.UiMixin"
   ],
   "injectors": {

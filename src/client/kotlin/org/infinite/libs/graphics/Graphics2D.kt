@@ -229,14 +229,14 @@ class Graphics2D(
     fun text(text: String, x: Float, y: Float) {
         val shadow = textStyle.shadow
         val size = textStyle.size
-        val font = client.font
+        val font = textStyle.font
         commandQueue.add(RenderCommand.Text(font, text, x, y, fillStyle, shadow, size))
     }
 
     fun textCentered(text: String, x: Float, y: Float) {
         val shadow = textStyle.shadow
         val size = textStyle.size
-        val font = client.font
+        val font = textStyle.font
         commandQueue.add(RenderCommand.TextCentered(font, text, x, y, fillStyle, shadow, size))
     }
 
