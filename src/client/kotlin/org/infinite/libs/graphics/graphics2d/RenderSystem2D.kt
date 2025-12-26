@@ -82,7 +82,15 @@ class RenderSystem2D(
             }
 
             is RenderCommand.Text -> {
-                textRenderer.text(command.font, command.text, command.x, command.y, command.color, command.shadow)
+                textRenderer.text(
+                    command.font,
+                    command.text,
+                    command.x,
+                    command.y,
+                    command.color,
+                    command.size,
+                    command.shadow,
+                )
             }
         }
     }

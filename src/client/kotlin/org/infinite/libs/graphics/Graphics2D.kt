@@ -21,8 +21,8 @@ class Graphics2D(
 ) : MinecraftInterface() {
     val gameDelta: Float = deltaTracker.gameTimeDeltaTicks
     val realDelta: Float = deltaTracker.realtimeDeltaTicks // Corrected typo here
-    val width: Int = client?.window?.guiScaledWidth ?: 200
-    val height: Int = client?.window?.guiScaledHeight ?: 150
+    val width: Int = client.window?.guiScaledWidth ?: 200
+    val height: Int = client.window?.guiScaledHeight ?: 150
     var strokeStyle: StrokeStyle? = null
     var fillStyle: Int = 0xFFFFFFFF.toInt()
     var textStyle: TextStyle = TextStyle()
@@ -228,8 +228,9 @@ class Graphics2D(
 
     fun text(text: String, x: Float, y: Float) {
         val shadow = textStyle.shadow
-        val font = client?.font ?: return
-        commandQueue.add(RenderCommand.Text(font, text, x, y, fillStyle, shadow))
+        val size = textStyle.size
+        val font = client.font ?: return
+        commandQueue.add(RenderCommand.Text(font, text, x, y, fillStyle, shadow, size))
     }
 
     /**

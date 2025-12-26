@@ -51,5 +51,6 @@ sealed interface RenderCommand {
         val y: Float,
         val color: Int,
         val shadow: Boolean,
+        val size: Float,
     ) : RenderCommand
 }
