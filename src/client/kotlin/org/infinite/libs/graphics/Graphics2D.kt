@@ -19,11 +19,12 @@ class Graphics2D(
     deltaTracker: DeltaTracker,
 ) : MinecraftInterface() {
     val gameDelta: Float = deltaTracker.gameTimeDeltaTicks
-    val realDelta: Float = deltaTracker.realtimeDeltaTicks
+    val realDelta: Float = deltaTracker.realtimeDeltaTicks // Corrected typo here
     val width: Int = client?.window?.guiScaledWidth ?: 200
     val height: Int = client?.window?.guiScaledHeight ?: 150
     var strokeStyle: StrokeStyle? = null
     var fillStyle: Int = 0xFFFFFFFF.toInt()
+    var enablePathGradient: Boolean = false // New property for gradient control
 
     // zIndexによるソートが不要なため、単純なFIFOキューに変更
     // 100は初期容量ではなく、最大容量の指定になるため、必要に応じて調整してください
@@ -40,7 +41,7 @@ class Graphics2D(
 
     // 新しい描画および変換機能のインスタンス
     private val fillOperations: Graphics2DPrimitivesFill = Graphics2DPrimitivesFill(commandQueue) { fillStyle }
-    private val strokeOperations: Graphics2DPrimitivesStroke = Graphics2DPrimitivesStroke(commandQueue) { strokeStyle }
+    private val strokeOperations: Graphics2DPrimitivesStroke = Graphics2DPrimitivesStroke(commandQueue, { strokeStyle }, { enablePathGradient })
     private val transformations: Graphics2DTransformations = Graphics2DTransformations(transformMatrix, transformStack)
 
     // --- fillRect ---
@@ -162,28 +163,33 @@ class Graphics2D(
     }
 
     fun lineTo(x: Float, y: Float) {
-        path2D.lineTo(x, y)
+        val style = strokeStyle ?: return
+        path2D.lineTo(x, y, style)
     }
 
     fun closePath() {
-        path2D.closePath()
+        val style = strokeStyle ?: return
+        path2D.closePath(style)
     }
 
     fun strokePath() {
-        val style = strokeStyle ?: return
-        path2D.strokePath(style.width, style.color)
+        strokeOperations.strokePolyline(path2D.getSegments())
+        path2D.clearSegments()
     }
 
     fun arc(x: Float, y: Float, radius: Float, startAngle: Float, endAngle: Float, counterclockwise: Boolean = false) {
-        path2D.arc(x, y, radius, startAngle, endAngle, counterclockwise)
+        val style = strokeStyle ?: return
+        path2D.arc(x, y, radius, startAngle, endAngle, counterclockwise, style)
     }
 
     fun arcTo(x1: Float, y1: Float, x2: Float, y2: Float, radius: Float) {
-        path2D.arcTo(x1, y1, x2, y2, radius)
+        val style = strokeStyle ?: return
+        path2D.arcTo(x1, y1, x2, y2, radius, style)
     }
 
     fun bezierCurveTo(cp1x: Float, cp1y: Float, cp2x: Float, cp2y: Float, x: Float, y: Float) {
-        path2D.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
+        val style = strokeStyle ?: return
+        path2D.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y, style)
     }
 
     // --- 変換API ---

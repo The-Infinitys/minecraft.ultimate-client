@@ -1,6 +1,7 @@
 package org.infinite.libs.graphics.graphics2d.system
 
 import org.infinite.libs.graphics.graphics2d.structs.RenderCommand
+import org.infinite.libs.graphics.graphics2d.structs.StrokeStyle
 import java.util.LinkedList
 import kotlin.math.*
 
@@ -9,17 +10,19 @@ import kotlin.math.*
  * パスデータを保持し、パスの操作ロジックを提供します。
  */
 class Path2D(
-    private val commandQueue: LinkedList<RenderCommand>,
+    private val commandQueue: LinkedList<RenderCommand>, // Retain commandQueue for arc/bezier approximation
 ) {
-    private var currentPath: MutableList<Pair<Float, Float>> = mutableListOf()
-    private var startPath: Pair<Float, Float>? = null
+    private val currentSegments: MutableList<PathSegment> = mutableListOf()
+    private var lastPoint: Pair<Float, Float>? = null
+    private var firstPointOfPath: Pair<Float, Float>? = null
 
     /**
      * 新しいパスを開始します。既存のパスはリセットされます。
      */
     fun beginPath() {
-        currentPath.clear()
-        startPath = null
+        currentSegments.clear()
+        lastPoint = null
+        firstPointOfPath = null
     }
 
     /**
@@ -27,85 +30,46 @@ class Path2D(
      * パスの開始点も設定されます。
      */
     fun moveTo(x: Float, y: Float) {
-        currentPath.add(x to y)
-        if (startPath == null) {
-            startPath = x to y
+        lastPoint = x to y
+        if (firstPointOfPath == null) {
+            firstPointOfPath = x to y
         }
     }
 
     /**
      * 現在のパスに指定された座標までの線を追加します。
      */
-    fun lineTo(x: Float, y: Float) {
-        currentPath.add(x to y)
+    fun lineTo(x: Float, y: Float, style: StrokeStyle) {
+        lastPoint?.let { p0 ->
+            currentSegments.add(PathSegment(p0.first, p0.second, x, y, style))
+        }
+        lastPoint = x to y
     }
 
     /**
      * パスを閉じます。パスの開始点と現在位置を直線で結びます。
      * パスが閉じられた後も、現在のペン位置は最後の点に留まります。
      */
-    fun closePath() {
-        startPath?.let {
-            if (currentPath.lastOrNull() != it) {
-                currentPath.add(it)
+    fun closePath(style: StrokeStyle) {
+        lastPoint?.let { p0 ->
+            firstPointOfPath?.let { pStart ->
+                if (p0 != pStart) { // Only add segment if not already at start
+                    currentSegments.add(PathSegment(p0.first, p0.second, pStart.first, pStart.second, style))
+                }
             }
         }
+        // Do NOT reset lastPoint here. lastPoint should reflect the actual end of drawing operations.
+        // For a closed path, the last point is geometrically the first point, but path operations might continue.
     }
 
     /**
      * 現在のパスを、現在のストロークスタイルで描画します。
      * 描画後、パスはクリアされます。
      */
-    fun strokePath(strokeWidth: Float, strokeColor: Int) {
-        if (currentPath.size < 2) return
-
-        // パスを線分に分解して描画
-        for (i in 0 until currentPath.size - 1) {
-            val p1 = currentPath[i]
-            val p2 = currentPath[i + 1]
-
-            val x1 = p1.first
-            val y1 = p1.second
-            val x2 = p2.first
-            val y2 = p2.second
-
-            if (strokeWidth <= 0) continue
-
-            val dx = x2 - x1
-            val dy = y2 - y1
-            val length = sqrt(dx * dx + dy * dy)
-
-            if (length == 0f) continue
-
-            val angle = atan2(dy.toDouble(), dx.toDouble()).toFloat()
-            val halfWidth = strokeWidth / 2.0f
-
-            val nx = -sin(angle) // 法線ベクトルのx成分
-            val ny = cos(angle) // 法線ベクトルのy成分
-
-            // 線の四隅の座標を計算
-            val p1x_quad = x1 + nx * halfWidth
-            val p1y_quad = y1 + ny * halfWidth
-            val p2x_quad = x2 + nx * halfWidth
-            val p2y_quad = y2 + ny * halfWidth
-            val p3x_quad = x2 - nx * halfWidth
-            val p3y_quad = y2 - ny * halfWidth
-            val p4x_quad = x1 - nx * halfWidth
-            val p4y_quad = y1 - ny * halfWidth
-
-            commandQueue.add(
-                RenderCommand.FillQuad(
-                    p1x_quad, p1y_quad,
-                    p2x_quad, p2y_quad,
-                    p3x_quad, p3y_quad,
-                    p4x_quad, p4y_quad,
-                    strokeColor, strokeColor, strokeColor, strokeColor,
-                ),
-            )
-        }
-        // パス描画後にパスをクリア
-        currentPath.clear()
-        startPath = null
+    fun strokePath() {
+        // Rendering logic is now handled externally by Graphics2DPrimitivesStroke.
+        // This method only clears the path after it has been used.
+        // The clearing will be handled by Graphics2D after calling strokePolyline.
     }
 
     /**
@@ -116,10 +80,11 @@ class Path2D(
      * @param startAngle 円弧の開始角度（ラジアン）
      * @param endAngle 円弧の終了角度（ラジアン）
      * @param counterclockwise 反時計回りであるかどうか。デフォルトはfalse（時計回り）。
+     * @param style 現在のストロークスタイル
      */
-    fun arc(x: Float, y: Float, radius: Float, startAngle: Float, endAngle: Float, counterclockwise: Boolean = false) {
+    fun arc(x: Float, y: Float, radius: Float, startAngle: Float, endAngle: Float, counterclockwise: Boolean = false, style: StrokeStyle) {
         // 現在のパスが空の場合、moveToで開始点に移動
-        if (currentPath.isEmpty()) {
+        if (lastPoint == null) {
             moveTo(x + cos(startAngle) * radius, y + sin(startAngle) * radius)
         }
 
@@ -159,7 +124,7 @@ class Path2D(
 
         for (i in 1..segments) {
             val angle = startAngle + angleStep * i
-            lineTo(x + cos(angle) * radius, y + sin(angle) * radius)
+            lineTo(x + cos(angle) * radius, y + sin(angle) * radius, style)
         }
     }
 
@@ -170,15 +135,16 @@ class Path2D(
      * @param x2 制御点2のX座標
      * @param y2 制御点2のY座標
      * @param radius 円弧の半径
+     * @param style 現在のストロークスタイル
      */
-    fun arcTo(x1: Float, y1: Float, x2: Float, y2: Float, radius: Float) {
-        if (currentPath.isEmpty()) {
+    fun arcTo(x1: Float, y1: Float, x2: Float, y2: Float, radius: Float, style: StrokeStyle) {
+        if (lastPoint == null) {
             // 現在のパスが空の場合は何もしない (moveTo(x1, y1) とはしない)
             return
         }
 
-        val p0x = currentPath.last().first
-        val p0y = currentPath.last().second
+        val p0x = lastPoint!!.first
+        val p0y = lastPoint!!.second
 
         // ベクトル P0P1 (v1) と P1P2 (v2)
         val v1x = x1 - p0x
@@ -191,7 +157,7 @@ class Path2D(
 
         // 長さが0の場合は何もしない
         if (len1 < 1e-6 || len2 < 1e-6) {
-            lineTo(x1, y1) // 接点がないので、制御点1まで直線
+            lineTo(x1, y1, style) // 接点がないので、制御点1まで直線
             return
         }
 
@@ -206,7 +172,7 @@ class Path2D(
 
         // P0, P1, P2 が同一直線上にある場合、または半径が0の場合、lineTo(x1, y1)
         if (abs(cosTheta - 1.0f) < 1e-6 || radius == 0f) {
-            lineTo(x1, y1)
+            lineTo(x1, y1, style)
             return
         }
 
@@ -246,9 +212,9 @@ class Path2D(
         val counterclockwiseArc = crossProduct > 0
 
         // lineToでt1に接続
-        lineTo(t1x, t1y)
+        lineTo(t1x, t1y, style)
         // arcメソッドを呼び出す
-        arc(cx, cy, radius, startArcAngle, endArcAngle, counterclockwiseArc)
+        arc(cx, cy, radius, startArcAngle, endArcAngle, counterclockwiseArc, style)
     }
 
     /**
@@ -259,15 +225,16 @@ class Path2D(
      * @param cp2y 制御点2のY座標
      * @param x 終点のX座標
      * @param y 終点のY座標
+     * @param style 現在のストロークスタイル
      */
-    fun bezierCurveTo(cp1x: Float, cp1y: Float, cp2x: Float, cp2y: Float, x: Float, y: Float) {
-        if (currentPath.isEmpty()) {
+    fun bezierCurveTo(cp1x: Float, cp1y: Float, cp2x: Float, cp2y: Float, x: Float, y: Float, style: StrokeStyle) {
+        if (lastPoint == null) {
             // パスが空の場合は何もしない。
             return
         }
 
-        val p0x = currentPath.last().first
-        val p0y = currentPath.last().second
+        val p0x = lastPoint!!.first
+        val p0y = lastPoint!!.second
 
         // ベジェ曲線を多数の短い線分に分割して近似する
         val segments = 20 // 分割数。必要に応じて調整
@@ -286,7 +253,17 @@ class Path2D(
             val pTx = invT3 * p0x + 3 * invT2 * t * cp1x + 3 * invT * t2 * cp2x + t3 * x
             val pTy = invT3 * p0y + 3 * invT2 * t * cp1y + 3 * invT * t2 * cp2y + t3 * y
 
-            lineTo(pTx, pTy)
+            lineTo(pTx, pTy, style)
         }
+    }
+
+    // Accessor for currentSegments
+    fun getSegments(): List<PathSegment> = currentSegments
+
+    // Method to clear segments
+    fun clearSegments() {
+        currentSegments.clear()
+        lastPoint = null
+        firstPointOfPath = null
     }
 }

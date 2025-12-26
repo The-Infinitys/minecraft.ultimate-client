@@ -180,6 +180,37 @@ class HelloFeature : LocalFeature() {
         graphics2D.fillStyle = 0x80808080.toInt() // 半透明のグレー
         graphics2D.fillQuad(50f, 450f, 100f, 450f, 100f, 500f, 50f, 500f) // 正方形
 
+        // --- 7. グラデーションパスのテスト (Path APIの新機能) ---
+        graphics2D.save()
+        graphics2D.translate(100f, 500f) // パスの開始位置を調整
+        graphics2D.enablePathGradient = true // Enable gradient for this path
+
+        graphics2D.beginPath()
+        graphics2D.moveTo(0f, 0f)
+
+        // 最初のセグメント: 赤、太さ2.0f
+        graphics2D.strokeStyle = StrokeStyle(0xFFFF0000.toInt(), 2.0f)
+        graphics2D.lineTo(50f, 0f)
+
+        // 2番目のセグメント: 緑、太さ5.0f
+        graphics2D.strokeStyle = StrokeStyle(0xFF00FF00.toInt(), 5.0f)
+        graphics2D.lineTo(75f, 50f)
+
+        // 3番目のセグメント: 青、太さ8.0f
+        graphics2D.strokeStyle = StrokeStyle(0xFF0000FF.toInt(), 8.0f)
+        graphics2D.lineTo(25f, 100f)
+
+        // 4番目のセグメント: 黄色、太さ3.0f
+        graphics2D.strokeStyle = StrokeStyle(0xFFFFFF00.toInt(), 3.0f)
+        graphics2D.lineTo(0f, 50f)
+
+        // パスを閉じる: マゼンタ、太さ6.0f
+        graphics2D.strokeStyle = StrokeStyle(0xFFFF00FF.toInt(), 6.0f)
+        graphics2D.closePath()
+
+        graphics2D.strokePath()
+        graphics2D.restore()
+
         return graphics2D
     }
 }

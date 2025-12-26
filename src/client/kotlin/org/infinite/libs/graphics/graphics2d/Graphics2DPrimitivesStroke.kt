@@ -2,14 +2,17 @@ package org.infinite.libs.graphics.graphics2d
 
 import org.infinite.libs.graphics.graphics2d.structs.RenderCommand
 import org.infinite.libs.graphics.graphics2d.structs.StrokeStyle
+import org.infinite.libs.graphics.graphics2d.system.PathSegment
 import org.infinite.libs.graphics.graphics2d.system.PointPair
 import java.util.LinkedList
 
 class Graphics2DPrimitivesStroke(
     private val commandQueue: LinkedList<RenderCommand>,
     private val getStrokeStyle: () -> StrokeStyle?, // Lambda to get current strokeStyle from Graphics2D
+    private val enablePathGradient: () -> Boolean, // Lambda to get enablePathGradient from Graphics2D
 ) {
     private val strokeStyle: StrokeStyle? get() = getStrokeStyle()
+    private val isPathGradientEnabled: Boolean get() = enablePathGradient()
 
     fun strokeRect(x: Float, y: Float, width: Float, height: Float) {
         val style = strokeStyle ?: return
@@ -221,5 +224,116 @@ class Graphics2DPrimitivesStroke(
         drawColoredEdge(p0, p1, inCol0, inCol1, col0, col1)
         drawColoredEdge(p1, p2, inCol1, inCol2, col1, col2)
         drawColoredEdge(p2, p0, inCol2, inCol0, col2, col0)
+    }
+
+    fun strokePolyline(segments: List<PathSegment>) {
+        if (segments.isEmpty()) return
+
+        val polylineVerticesWithStyles = mutableListOf<Triple<Float, Float, StrokeStyle>>()
+        if (segments.isNotEmpty()) {
+            polylineVerticesWithStyles.add(Triple(segments.first().x1, segments.first().y1, segments.first().style))
+            for (segment in segments) {
+                polylineVerticesWithStyles.add(Triple(segment.x2, segment.y2, segment.style))
+            }
+        } else {
+            return // No segments to draw
+        }
+
+        val isClosed = segments.size > 1 &&
+            segments.first().x1 == segments.last().x2 &&
+            segments.first().y1 == segments.last().y2
+
+        val miteredPoints = mutableListOf<PointPair>()
+
+        for (j in 0 until polylineVerticesWithStyles.size) {
+            val currV = polylineVerticesWithStyles[j]
+            val currX = currV.first
+            val currY = currV.second
+            val currSegmentStyle = currV.third // The style of the segment *starting* at this vertex
+
+            val prevX: Float
+            val prevY: Float
+            val nextX: Float
+            val nextY: Float
+            val halfWidthForMiter: Float
+
+            if (isClosed) {
+                val prevVIndex = if (j == 0) polylineVerticesWithStyles.size - 2 else j - 1
+                val nextVIndex = if (j == polylineVerticesWithStyles.size - 1) 1 else j + 1
+
+                val prevSegmentStyle = polylineVerticesWithStyles[prevVIndex].third
+
+                prevX = polylineVerticesWithStyles[prevVIndex].first
+                prevY = polylineVerticesWithStyles[prevVIndex].second
+                nextX = polylineVerticesWithStyles[nextVIndex].first
+                nextY = polylineVerticesWithStyles[nextVIndex].second
+
+                halfWidthForMiter = (prevSegmentStyle.width + currSegmentStyle.width) / 4f
+            } else { // Open path
+                if (j == 0) { // First vertex of the polyline (start cap)
+                    val firstSegment = segments.first()
+                    prevX = currX - (firstSegment.x2 - firstSegment.x1)
+                    prevY = currY - (firstSegment.y2 - firstSegment.y1)
+                    nextX = polylineVerticesWithStyles[j + 1].first
+                    nextY = polylineVerticesWithStyles[j + 1].second
+                    halfWidthForMiter = currSegmentStyle.width / 2f
+                } else if (j == polylineVerticesWithStyles.size - 1) { // Last vertex of the polyline (end cap)
+                    val lastSegment = segments.last()
+                    prevX = polylineVerticesWithStyles[j - 1].first
+                    prevY = polylineVerticesWithStyles[j - 1].second
+                    nextX = currX + (lastSegment.x2 - lastSegment.x1)
+                    nextY = currY + (lastSegment.y2 - lastSegment.y1)
+                    halfWidthForMiter = currSegmentStyle.width / 2f
+                } else { // Intermediate vertex (joint)
+                    prevX = polylineVerticesWithStyles[j - 1].first
+                    prevY = polylineVerticesWithStyles[j - 1].second
+                    nextX = polylineVerticesWithStyles[j + 1].first
+                    nextY = polylineVerticesWithStyles[j + 1].second
+
+                    val prevSegmentStyle = polylineVerticesWithStyles[j - 1].third
+                    halfWidthForMiter = (prevSegmentStyle.width + currSegmentStyle.width) / 4f
+                }
+            }
+
+            miteredPoints.add(
+                PointPair.calculateForMiter(
+                    currX,
+                    currY,
+                    prevX,
+                    prevY,
+                    nextX,
+                    nextY,
+                    halfWidthForMiter,
+                ),
+            )
+        }
+
+        val numSegmentsToDraw = segments.size
+        for (j in 0 until numSegmentsToDraw) {
+            val segment = segments[j]
+            val startMiter = miteredPoints[j]
+            val endMiter = if (isClosed && j == segments.size - 1) miteredPoints[0] else miteredPoints[j + 1]
+            val style = segment.style
+
+            val finalStartColor: Int
+            val finalEndColor: Int
+
+            if (isPathGradientEnabled) {
+                // Determine start and end colors for gradient
+                finalStartColor = style.color // Color of current segment's start
+                if (j + 1 < numSegmentsToDraw) {
+                    finalEndColor = segments[j + 1].style.color // Color of next segment's start
+                } else if (isClosed) {
+                    finalEndColor = segments.first().style.color // For closed path, last segment connects to first
+                } else {
+                    finalEndColor = style.color // For open path, last segment uses its own color
+                }
+            } else {
+                finalStartColor = style.color
+                finalEndColor = style.color
+            }
+
+            drawColoredEdge(startMiter, endMiter, finalStartColor, finalEndColor, finalStartColor, finalEndColor)
+        }
     }
 }
