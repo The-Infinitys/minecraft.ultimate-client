@@ -19,7 +19,7 @@ import java.util.function.Consumer
 class ModernTextRenderer(
     private val graphics: GuiGraphics,
     private val hoveredTextEffects: GuiGraphics.HoveredTextEffects,
-    private val additionalConsumer: Consumer<Style>?,
+    private val additionalConsumer: Consumer<Style>? = null,
 ) : ActiveTextCollector, Consumer<Style> {
     private fun createDefaultTextParameters(f: Float): ActiveTextCollector.Parameters {
         return ActiveTextCollector.Parameters(Matrix3x2f(graphics.pose()), f, graphics.scissorStack.peek())
@@ -35,7 +35,7 @@ class ModernTextRenderer(
         this.params = parameters
     }
 
-    override fun accept(style: Style) {
+    private fun originalAccept(style: Style) {
         val accessor = graphics as GuiGraphicsAccessor
 
         if (this.hoveredTextEffects.allowTooltip && style.hoverEvent != null) {
@@ -47,6 +47,16 @@ class ModernTextRenderer(
         }
 
         this.additionalConsumer?.accept(style)
+    }
+
+    override fun accept(style: Style) {
+        originalAccept(style)
+        val ultimateFontFeature =
+            UltimateClient.globalFeatures.rendering.ultimateFontFeature
+        val shouldEnable = ultimateFontFeature.isEnabled()
+        if (!shouldEnable) {
+            return
+        }
     }
 
     override fun accept(

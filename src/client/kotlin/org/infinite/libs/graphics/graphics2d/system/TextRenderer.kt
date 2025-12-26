@@ -2,10 +2,14 @@ package org.infinite.libs.graphics.graphics2d.system
 
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.render.state.GuiTextRenderState
+import net.minecraft.locale.Language
+import net.minecraft.network.chat.FormattedText
 import org.infinite.libs.graphics.graphics2d.text.IModernFontManager
 import org.infinite.libs.graphics.text.fromFontSet
 import org.infinite.libs.interfaces.MinecraftInterface
 import org.infinite.mixin.graphics.MinecraftAccessor
+import org.joml.Matrix3x2f
 
 class TextRenderer(private val guiGraphics: GuiGraphics) : MinecraftInterface() {
     private fun font(name: String): Font {
@@ -25,8 +29,21 @@ class TextRenderer(private val guiGraphics: GuiGraphics) : MinecraftInterface() 
         poseStack.scale(fontSize, fontSize)
 
         // 描画（座標は0, 0でOK）
-        guiGraphics.drawString(font, text, 0, 0, color, shadow)
-
+        val formattedCharSequence = Language.getInstance().getVisualOrder(FormattedText.of(text))
+        guiGraphics.guiRenderState.submitText(
+            GuiTextRenderState(
+                font,
+                formattedCharSequence,
+                Matrix3x2f(guiGraphics.pose()),
+                0,
+                0,
+                color,
+                0,
+                shadow,
+                false,
+                guiGraphics.scissorStack.peek(),
+            ),
+        )
         poseStack.popMatrix()
     }
 
