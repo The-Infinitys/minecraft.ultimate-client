@@ -6,49 +6,29 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import org.infinite.libs.core.features.Category
 import org.infinite.libs.core.features.feature.GlobalFeature
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
-open class GlobalCategory : Category<KClass<out GlobalFeature>, GlobalFeature>() {
-    override val features: ConcurrentHashMap<KClass<out GlobalFeature>, GlobalFeature> = ConcurrentHashMap()
+/**
+ * GlobalなFeatureを管理する抽象カテゴリ
+ */
+abstract class GlobalCategory : Category<KClass<out GlobalFeature>, GlobalFeature>() {
 
-    suspend fun onInitialized() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onInitialized()
-                    }
-                }.joinAll()
-        }
+    // 委譲プロパティを使用するため、features の override は不要です。
+    // 親クラス Category の val features: Map をそのまま使用します。
 
-    suspend fun onShutdown() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onShutdown()
-                    }
-                }.joinAll()
-        }
+    open suspend fun onInitialized() = coroutineScope {
+        features.values.map { launch(Dispatchers.Default) { it.onInitialized() } }.joinAll()
+    }
 
-    suspend fun onStartTick() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onStartTick()
-                    }
-                }.joinAll()
-        }
+    open suspend fun onShutdown() = coroutineScope {
+        features.values.map { launch(Dispatchers.Default) { it.onShutdown() } }.joinAll()
+    }
 
-    suspend fun onEndTick() =
-        coroutineScope {
-            features.values
-                .map { feature ->
-                    launch(Dispatchers.Default) {
-                        feature.onEndTick()
-                    }
-                }.joinAll()
-        }
+    open suspend fun onStartTick() = coroutineScope {
+        features.values.map { launch(Dispatchers.Default) { it.onStartTick() } }.joinAll()
+    }
+
+    open suspend fun onEndTick() = coroutineScope {
+        features.values.map { launch(Dispatchers.Default) { it.onEndTick() } }.joinAll()
+    }
 }

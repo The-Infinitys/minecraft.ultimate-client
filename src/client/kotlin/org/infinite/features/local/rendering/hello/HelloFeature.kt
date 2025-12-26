@@ -10,8 +10,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class HelloFeature : LocalFeature() {
+    val hello by property(IntProperty(1, 1, 100))
     init {
-        property("Hello", IntProperty(1, 1, 100))
         enable()
     }
 

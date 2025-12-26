@@ -13,7 +13,7 @@ object RenderTicks {
     ) {
         val commands =
             runBlocking {
-                return@runBlocking UltimateClient.localFeatureCategories.onStartUiRendering(deltaTracker)
+                return@runBlocking UltimateClient.localFeatures.onStartUiRendering(deltaTracker)
             }
         val renderSystem2D = RenderSystem2D(guiGraphics)
         renderSystem2D.render(commands)
@@ -25,7 +25,7 @@ object RenderTicks {
     ) {
         val commands =
             runBlocking {
-                return@runBlocking UltimateClient.localFeatureCategories.onEndUiRendering(deltaTracker)
+                return@runBlocking UltimateClient.localFeatures.onEndUiRendering(deltaTracker)
             }
         val renderSystem2D = RenderSystem2D(guiGraphics)
         renderSystem2D.render(commands)

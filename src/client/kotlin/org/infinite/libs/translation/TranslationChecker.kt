@@ -19,8 +19,8 @@ object TranslationChecker : SimplePreparableReloadListener<Unit>() {
 
     private val allTranslations: List<String>
         get() {
-            val localFeatures = UltimateClient.localFeatureCategories.translations
-            val globalFeatures = UltimateClient.globalFeatureCategories.translations
+            val localFeatures = UltimateClient.localFeatures.translations
+            val globalFeatures = UltimateClient.globalFeatures.translations
             return localFeatures + globalFeatures + additionalTranslationList
         }
 

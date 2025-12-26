@@ -4,25 +4,24 @@ import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import org.infinite.features.local.rendering.LocalRenderingCategory
 import org.infinite.libs.config.ConfigManager
-import org.infinite.libs.core.features.categories.GlobalFeatureCategories
-import org.infinite.libs.core.features.categories.LocalFeatureCategories
 import org.infinite.libs.core.tick.WorldTicks
 import org.infinite.libs.log.LogSystem
 import org.infinite.libs.translation.TranslationChecker
+import org.infinite.ultimate.UltimateGlobalFeatures
+import org.infinite.ultimate.UltimateLocalFeatures
 
 object UltimateClient : ClientModInitializer {
-    val globalFeatureCategories = GlobalFeatureCategories(listOf())
-    val localFeatureCategories = LocalFeatureCategories(listOf(LocalRenderingCategory()))
-    val worldTicks = WorldTicks(localFeatureCategories)
+    val globalFeatures = UltimateGlobalFeatures()
+    val localFeatures = UltimateLocalFeatures()
+    val worldTicks = WorldTicks(localFeatures)
 
     override fun onInitializeClient() {
         LogSystem.init()
 
         // 1. グローバル設定のロード
         ConfigManager.loadGlobal()
-        globalFeatureCategories.onInitialized()
+        globalFeatures.onInitialized()
         TranslationChecker.register()
         // --- Server Connection Events ---
 
@@ -30,22 +29,22 @@ object UltimateClient : ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register { _, _, _ ->
             // 2. ローカル設定（サーバー/ワールド別）のロード
             ConfigManager.loadLocal()
-            localFeatureCategories.onConnected()
+            localFeatures.onConnected()
         }
 
         // サーバー切断時
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             // 3. ローカル設定の保存（切断時にそのサーバーの状態を保持）
             ConfigManager.saveLocal()
-            localFeatureCategories.onDisconnected()
+            localFeatures.onDisconnected()
         }
 
         // --- Tick Events ---
         ClientTickEvents.START_CLIENT_TICK.register { _ ->
-            globalFeatureCategories.onStartTick()
+            globalFeatures.onStartTick()
         }
         ClientTickEvents.END_CLIENT_TICK.register { _ ->
-            globalFeatureCategories.onEndTick()
+            globalFeatures.onEndTick()
         }
 
         worldTicks.register()
@@ -56,8 +55,8 @@ object UltimateClient : ClientModInitializer {
             ConfigManager.saveGlobal()
             ConfigManager.saveLocal() // 念のため現在の接続先も保存
 
-            globalFeatureCategories.onShutdown()
-            localFeatureCategories.onShutdown()
+            globalFeatures.onShutdown()
+            localFeatures.onShutdown()
         }
     }
 }

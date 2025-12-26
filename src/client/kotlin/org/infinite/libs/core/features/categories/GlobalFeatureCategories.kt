@@ -1,86 +1,46 @@
 package org.infinite.libs.core.features.categories
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.infinite.libs.core.features.FeatureCategories
 import org.infinite.libs.core.features.categories.category.GlobalCategory
 import org.infinite.libs.core.features.feature.GlobalFeature
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
-class GlobalFeatureCategories(
-    categories: List<GlobalCategory>,
-) : FeatureCategories<KClass<out GlobalFeature>, GlobalFeature, KClass<out GlobalCategory>, GlobalCategory>() {
-    override val categories: ConcurrentHashMap<KClass<out GlobalCategory>, GlobalCategory> = ConcurrentHashMap()
+/**
+ * Global（クライアント起動から終了まで生存）なカテゴリー管理の基底クラス
+ */
+abstract class GlobalFeatureCategories : FeatureCategories<
+    KClass<out GlobalFeature>,
+    GlobalFeature,
+    KClass<out GlobalCategory>,
+    GlobalCategory,
+    >() {
 
-    init {
-        categories.forEach { insert(it) }
-    }
-
-    // 初期化などのライフサイクルを管理するスコープ
-    private val lifecycleScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    // ライフサイクル管理用のスコープ
+    protected val lifecycleScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     fun onInitialized() {
         lifecycleScope.launch {
-            try {
-                // すべてのカテゴリの初期化を並列実行
-                categories.values
-                    .map { category ->
-                        launch { category.onInitialized() }
-                    }.joinAll()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            categories.values.map { launch { it.onInitialized() } }.joinAll()
         }
     }
 
     fun onShutdown() {
-        // 1. まず、実行中の初期化処理などをすべてキャンセルする
         lifecycleScope.cancel()
-
-        // 2. 終了処理（保存など）は「確実に終わるまで待つ」必要があるため runBlocking を使用
         runBlocking(Dispatchers.Default) {
-            categories.values
-                .map { category ->
-                    launch {
-                        try {
-                            category.onShutdown()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                }.joinAll()
+            categories.values.map { launch { it.onShutdown() } }.joinAll()
         }
     }
 
     fun onStartTick() {
         lifecycleScope.launch {
-            try {
-                categories.values
-                    .map { category ->
-                        launch { category.onStartTick() }
-                    }.joinAll()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            categories.values.map { launch { it.onStartTick() } }.joinAll()
         }
     }
 
     fun onEndTick() {
         lifecycleScope.launch {
-            try {
-                categories.values
-                    .map { category ->
-                        launch { category.onEndTick() }
-                    }.joinAll()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            categories.values.map { launch { it.onEndTick() } }.joinAll()
         }
     }
 }
