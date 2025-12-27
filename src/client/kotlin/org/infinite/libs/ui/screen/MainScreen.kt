@@ -1,4 +1,4 @@
-package org.infinite.ui.screen
+package org.infinite.libs.ui.screen
 
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component

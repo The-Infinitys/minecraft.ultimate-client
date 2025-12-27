@@ -6,12 +6,13 @@ import org.infinite.libs.core.features.Property
  * 複数の選択肢から1つを選択するプロパティ
  * @param T 選択肢の型
  * @param default デフォルト値
- * @param options 利用可能な選択肢のリスト
+ * @param opts 利用可能な選択肢のリスト
  */
-class SelectionProperty<T>(
+open class SelectionProperty<T>(
     default: T,
-    val options: List<T>,
+    opts: List<T>,
 ) : Property<T>(default) {
+    open val options = opts
     override var value: T = default
         set(newValue) {
             if (options.contains(newValue)) field = newValue

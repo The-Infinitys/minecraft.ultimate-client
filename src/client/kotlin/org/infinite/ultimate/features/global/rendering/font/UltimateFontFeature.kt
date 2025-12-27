@@ -1,4 +1,4 @@
-package org.infinite.features.global.rendering.font
+package org.infinite.ultimate.features.global.rendering.font
 
 import org.infinite.libs.core.features.feature.GlobalFeature
 import org.infinite.libs.core.features.property.StringProperty

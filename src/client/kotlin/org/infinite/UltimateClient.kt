@@ -8,13 +8,22 @@ import org.infinite.libs.config.ConfigManager
 import org.infinite.libs.core.tick.WorldTicks
 import org.infinite.libs.log.LogSystem
 import org.infinite.libs.translation.TranslationChecker
+import org.infinite.libs.ui.theme.Theme
+import org.infinite.libs.ui.theme.ThemeManager
 import org.infinite.ultimate.UltimateGlobalFeatures
 import org.infinite.ultimate.UltimateLocalFeatures
+import org.infinite.ultimate.theme.DefaultTheme
 
 object UltimateClient : ClientModInitializer {
     val globalFeatures = UltimateGlobalFeatures()
     val localFeatures = UltimateLocalFeatures()
     val worldTicks = WorldTicks(localFeatures)
+    val themeManager: ThemeManager = ThemeManager(DefaultTheme())
+    val theme: Theme
+        get() {
+            val themeName = globalFeatures.rendering.themeFeature.currentTheme.value
+            return themeManager.getTheme(themeName)
+        }
 
     override fun onInitializeClient() {
         LogSystem.init()
