@@ -46,26 +46,35 @@ class InfiniteTheme : Theme() {
 
         graphics2DRenderer.enableScissor(x.toInt(), y.toInt(), width.toInt(), height.toInt())
 
-        for (i in 0 until size) {
-            // アルファ値を適用した色
-            val color = baseColors[i].alpha(alphaInt)
-            val nextColor = baseColors[(i + 1) % size].alpha(alphaInt)
+// ... 前後の処理は同じ ...
 
-            // 角度の計算 (i / size を Double にキャストするのが重要)
+        // ループを2ステップずつ進める
+        for (i in 0 until size step 2) {
+            val color1 = baseColors[i].alpha(alphaInt)
+            val color2 = baseColors[(i + 1) % size].alpha(alphaInt)
+            val color3 = baseColors[(i + 2) % size].alpha(alphaInt)
+
+            // 3つの外周ポイントの角度
             val d1 = 2.0 * PI * ((i.toDouble() / size + t) % 1.0)
             val d2 = 2.0 * PI * (((i + 1).toDouble() / size + t) % 1.0)
+            val d3 = 2.0 * PI * (((i + 2).toDouble() / size + t) % 1.0)
 
-            // 頂点座標
+            // 座標計算
             val x1 = centerX + r * cos(d1).toFloat()
             val y1 = centerY + r * sin(d1).toFloat()
             val x2 = centerX + r * cos(d2).toFloat()
             val y2 = centerY + r * sin(d2).toFloat()
+            val x3 = centerX + r * cos(d3).toFloat()
+            val y3 = centerY + r * sin(d3).toFloat()
 
-            // 三角形の描画 (中心, 点1, 点2)
-            // fillTriangle(x1, y1, x2, y2, x3, y3, c1, c2, c3)
-            graphics2DRenderer.fillTriangle(
-                centerX, centerY, x1, y1, x2, y2,
-                centerColor, color, nextColor,
+            /*
+             * fillQuad の頂点指定:
+             * 多くのライブラリでは 1(x1,y1) -> 2(x2,y2) -> 3(x3,y3) -> 4(centerX,centerY)
+             * のように反時計回りまたは時計回りに指定します。
+             */
+            graphics2DRenderer.fillQuad(
+                x1, y1, x2, y2, x3, y3, centerX, centerY,
+                color1, color2, color3, centerColor,
             )
         }
 
