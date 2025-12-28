@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -8,6 +10,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
     java
     id("com.diffplug.spotless")
+    id("net.ltgt.errorprone") version "4.3.0"
 }
 group = property("maven_group")!!
 version = property("mod_version")!!
@@ -56,6 +59,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.12.0") // Mockkの最新安定版
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1") // JUnit Jupiter API
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1") // JUnit Jupiter Engine
+    errorprone("com.google.errorprone:error_prone_core:2.45.0")
 }
 tasks {
     test {
@@ -154,6 +158,12 @@ spotless {
                 "ktlint_standard_no-wildcard-imports" to "disabled",
             ),
         )
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.errorprone {
+        isEnabled.set(true)
     }
 }
 
