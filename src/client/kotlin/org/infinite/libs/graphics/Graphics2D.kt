@@ -1,8 +1,11 @@
 package org.infinite.libs.graphics
 
 import net.minecraft.client.DeltaTracker
+import net.minecraft.resources.Identifier
+import net.minecraft.world.item.ItemStack
 import org.infinite.libs.graphics.graphics2d.Graphics2DPrimitivesFill
 import org.infinite.libs.graphics.graphics2d.Graphics2DPrimitivesStroke
+import org.infinite.libs.graphics.graphics2d.Graphics2DPrimitivesTexture
 import org.infinite.libs.graphics.graphics2d.Graphics2DTransformations
 import org.infinite.libs.graphics.graphics2d.structs.RenderCommand2D
 import org.infinite.libs.graphics.graphics2d.structs.StrokeStyle
@@ -44,7 +47,8 @@ open class Graphics2D(
     private val strokeOperations: Graphics2DPrimitivesStroke =
         Graphics2DPrimitivesStroke(commandQueue, { strokeStyle }, { enablePathGradient })
     private val transformations: Graphics2DTransformations = Graphics2DTransformations(transformMatrix, transformStack)
-
+    private val textureOperations: Graphics2DPrimitivesTexture =
+        Graphics2DPrimitivesTexture(commandQueue) { transformMatrix }
     // --- fillRect ---
 
     fun fillRect(x: Float, y: Float, width: Float, height: Float) {
@@ -213,6 +217,7 @@ open class Graphics2D(
         val font = textStyle.font
         commandQueue.add(RenderCommand2D.TextCentered(font, text, x, y, fillStyle, shadow, size))
     }
+
     private fun pushTransformCommand() {
         commandQueue.add(RenderCommand2D.SetTransform(Matrix3x2f(transformMatrix)))
     }
@@ -240,6 +245,40 @@ open class Graphics2D(
 
     fun disableScissor() {
         commandQueue.add(RenderCommand2D.DisableScissor)
+    }
+
+    fun drawItem(stack: ItemStack, x: Float, y: Float, size: Float = 16f) {
+        textureOperations.drawItem(stack, x, y, size)
+    }
+
+    fun drawTexture(
+        identifier: Identifier,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        u: Float,
+        v: Float,
+        uWidth: Float,
+        uHeight: Float,
+        textureWidth: Float,
+        textureHeight: Float,
+        color: Int,
+    ) {
+        textureOperations.drawTexture(
+            identifier,
+            x,
+            y,
+            width,
+            height,
+            u,
+            v,
+            uWidth,
+            uHeight,
+            textureWidth,
+            textureHeight,
+            color,
+        )
     }
 
     /**

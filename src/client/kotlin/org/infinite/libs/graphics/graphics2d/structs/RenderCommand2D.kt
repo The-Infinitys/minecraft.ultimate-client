@@ -1,5 +1,7 @@
 package org.infinite.libs.graphics.graphics2d.structs
 
+import net.minecraft.resources.Identifier
+import net.minecraft.world.item.ItemStack
 import org.joml.Matrix3x2f
 
 sealed interface RenderCommand2D {
@@ -65,4 +67,32 @@ sealed interface RenderCommand2D {
     data class SetTransform(val matrix: Matrix3x2f) : RenderCommand2D
     data class EnableScissor(val x: Int, val y: Int, val width: Int, val height: Int) : RenderCommand2D
     object DisableScissor : RenderCommand2D
+    data class DrawTexture(
+        val identifier: Identifier,
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val height: Float,
+        val u: Float,
+        val v: Float,
+        val uWidth: Float,
+        val vHeight: Float,
+        val textureWidth: Float,
+        val textureHeight: Float,
+        val color: Int, // アルファ値や乗算色の制御用
+    ) : RenderCommand2D
+
+    /**
+     * アイテム描画コマンド
+     * @param stack アイテム情報
+     * @param x 描画座標
+     * @param y 描画座標
+     * @param scale 描画スケール（デフォルト1f）。
+     */
+    data class DrawItem(
+        val stack: ItemStack,
+        val x: Float,
+        val y: Float,
+        val scale: Float,
+    ) : RenderCommand2D
 }
