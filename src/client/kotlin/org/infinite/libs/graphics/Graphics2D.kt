@@ -27,8 +27,8 @@ open class Graphics2D(
 ) : MinecraftInterface() {
     val gameDelta: Float = deltaTracker.gameTimeDeltaTicks
     val realDelta: Float = deltaTracker.realtimeDeltaTicks // Corrected typo here
-    val width: Int = minecraft.window.guiScaledWidth
-    val height: Int = minecraft.window.guiScaledHeight
+    open val width: Int = minecraft.window.guiScaledWidth
+    open val height: Int = minecraft.window.guiScaledHeight
     var strokeStyle: StrokeStyle? = null
     var fillStyle: Int = 0xFFFFFFFF.toInt()
     var textStyle: TextStyle = TextStyle()
@@ -354,5 +354,5 @@ open class Graphics2D(
     /**
      * 登録された順にコマンドを取り出します
      */
-    fun commands(): List<RenderCommand2D> = commandQueue.toList()
+    open fun commands(): List<RenderCommand2D> = commandQueue.toList()
 }

@@ -4,7 +4,6 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "core.multiplayer.ClientLevelMixin",
-    "graphics.FontManagerAccessor",
     "graphics.FontManagerMixin",
     "graphics.FontMixin",
     "graphics.GuiGraphicsAccessor",
@@ -12,6 +11,8 @@
     "graphics.LevelRendererMixin",
     "graphics.MinecraftAccessor",
     "graphics.MinecraftMixin",
+    "graphics.ScreenAccessor",
+    "graphics.ScreenMixin",
     "graphics.UiMixin"
   ],
   "injectors": {

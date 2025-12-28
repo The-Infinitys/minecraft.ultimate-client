@@ -10,7 +10,6 @@ import org.infinite.InfiniteClient
 import org.infinite.libs.graphics.graphics2d.RenderSystem2D
 import org.infinite.libs.graphics.graphics3d.RenderSystem3D
 import org.infinite.libs.graphics.system.ProjectionData
-import org.infinite.libs.log.LogSystem
 import org.joml.Matrix4f
 import org.joml.Vector4f
 
@@ -95,7 +94,6 @@ object RenderTicks {
             runBlocking {
                 return@runBlocking InfiniteClient.localFeatures.onLevelRendering()
             }
-        LogSystem.log("onLevelRendering: total(${commands.size})")
         renderSystem3D.render(commands)
     }
 }

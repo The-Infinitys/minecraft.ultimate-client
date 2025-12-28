@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(FontManager.class)
 public abstract class FontManagerMixin implements IModernFontManager {
-  @Shadow @Final private Map<Identifier, FontSet> fontSets;
+  @Shadow @Final public Map<Identifier, FontSet> fontSets;
 
   @Override
   public @NonNull FontSet infinite$fontSetFromStyle(Style style) {

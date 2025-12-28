@@ -1,6 +1,6 @@
 package org.infinite.infinite.theme.infinite
 
-import org.infinite.libs.graphics.bundle.Graphics2DRenderer
+import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.ui.theme.ColorScheme
 import org.infinite.libs.ui.theme.Theme
 import org.infinite.utils.alpha
@@ -19,7 +19,7 @@ class InfiniteTheme : Theme() {
         y: Float,
         width: Float,
         height: Float,
-        graphics2DRenderer: Graphics2DRenderer,
+        graphics2DRenderer: Graphics2D,
         alpha: Float,
     ) {
         val centerX = x + width / 2f
@@ -77,8 +77,6 @@ class InfiniteTheme : Theme() {
                 color1, color2, color3, centerColor,
             )
         }
-
         graphics2DRenderer.disableScissor()
-        graphics2DRenderer.flush()
     }
 }
