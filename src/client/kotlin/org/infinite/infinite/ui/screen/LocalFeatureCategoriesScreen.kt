@@ -10,6 +10,8 @@ import org.infinite.libs.ui.widgets.AbstractCarouselWidget
 class LocalFeatureCategoriesScreen : AbstractCarouselScreen<LocalCategory>(Component.literal("Infinite Client")) {
     override val dataSource: List<LocalCategory>
         get() = InfiniteClient.localFeatures.categories.values.toList()
+    override val lerpFactor: Float
+        get() = 0.8f
 
     override fun createWidget(index: Int, data: LocalCategory): AbstractCarouselWidget<LocalCategory> {
         return LocalCategoryWidget(0, 0, 120, 180, data, this, index)

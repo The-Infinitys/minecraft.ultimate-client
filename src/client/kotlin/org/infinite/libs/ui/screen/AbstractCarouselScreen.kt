@@ -14,16 +14,25 @@ import org.lwjgl.glfw.GLFW
 import kotlin.math.*
 
 abstract class AbstractCarouselScreen<T>(title: Component) : Screen(title) {
-
+    val currentWidget: AbstractCarouselWidget<T>
+        get() = carouselWidgets[pageIndex]
     private var _pageIndex: Int = 0
     protected abstract val dataSource: List<T>
     protected val pageSize get() = dataSource.size
 
+    private val screenWidth: Float
+        get() = minecraft.window.guiScaledWidth.toFloat()
+    val screenHeight: Float
+        get() = minecraft.window.guiScaledHeight.toFloat()
+    private val widgetWidth: Float
+        get() = (screenWidth * 0.5f).coerceAtLeast(512f).coerceAtMost(screenWidth * 0.9f)
+    private val widgetHeight: Float
+        get() = screenHeight * 0.8f
     private var animatedIndex: Float = 0f
-    private val lerpFactor = 0.5f
+    protected open val lerpFactor = 0.5f
 
-    protected open val radius: Float get() = categoryWidgets.size * 100f
-    protected val categoryWidgets = mutableListOf<AbstractCarouselWidget<T>>()
+    protected open val radius: Float get() = carouselWidgets.size * 100f
+    protected val carouselWidgets = mutableListOf<AbstractCarouselWidget<T>>()
 
     var pageIndex: Int
         get() = _pageIndex
@@ -38,20 +47,27 @@ abstract class AbstractCarouselScreen<T>(title: Component) : Screen(title) {
 
     override fun init() {
         super.init()
-        categoryWidgets.clear()
+        carouselWidgets.clear()
 
         dataSource.withIndex().forEach { (index, data) ->
             val widget = createWidget(index, data)
-            categoryWidgets.add(widget)
+            carouselWidgets.add(widget)
             this.addRenderableWidget(widget)
         }
     }
 
-    data class WidgetFrameData(val x: Float, val y: Float, val z: Float, val scale: Float)
+    data class WidgetFrameData(
+        val x: Float,
+        val y: Float,
+        val z: Float,
+        val scale: Float,
+        val widgetWidth: Float,
+        val widgetHeight: Float,
+    )
 
     private val focusZ = 4000f
     private fun calculateWidgetFrame(index: Int): WidgetFrameData {
-        if (pageSize == 0) return WidgetFrameData(0f, 0f, 0f, 1f)
+        if (pageSize == 0) return WidgetFrameData(0f, 0f, 0f, 1f, 0f, 0f)
 
         val angle = 2 * PI.toFloat() * (index - animatedIndex) / pageSize
         val centerZ = focusZ + radius
@@ -60,7 +76,7 @@ abstract class AbstractCarouselScreen<T>(title: Component) : Screen(title) {
         val scale = focusZ / worldZ
         val screenX = worldX / scale
 
-        return WidgetFrameData(screenX, 0f, worldZ, scale)
+        return WidgetFrameData(screenX, 0f, worldZ, scale, widgetWidth, widgetHeight)
     }
 
     class WidgetGraphics2D(
@@ -68,18 +84,16 @@ abstract class AbstractCarouselScreen<T>(title: Component) : Screen(title) {
         data: WidgetFrameData,
         screenWidth: Float,
         screenHeight: Float,
-        widgetWidth: Float,
-        widgetHeight: Float,
     ) : Graphics2D(deltaTracker) {
-        override val width: Int = widgetWidth.roundToInt()
-        override val height: Int = widgetHeight.roundToInt()
+        override val width: Int = data.widgetWidth.roundToInt()
+        override val height: Int = data.widgetHeight.roundToInt()
 
         init {
             this.save()
             this.translate(screenWidth / 2f, screenHeight / 2f)
             this.translate(data.x, data.y)
             this.scale(data.scale, data.scale)
-            this.translate(-widgetWidth / 2f, -widgetHeight / 2f)
+            this.translate(-data.widgetWidth / 2f, -data.widgetHeight / 2f)
         }
 
         override fun commands(): List<RenderCommand2D> {
@@ -102,38 +116,32 @@ abstract class AbstractCarouselScreen<T>(title: Component) : Screen(title) {
         }
 
         val renderSystem2D = RenderSystem2D(guiGraphics)
-        val sw = minecraft.window.guiScaledWidth.toFloat()
-        val sh = minecraft.window.guiScaledHeight.toFloat()
-
         // 基準となるウィジェットのサイズ
-        val baseW = (sw * 0.5f).coerceAtLeast(512f).coerceAtMost(sw * 0.9f)
-        val baseH = sh * 0.8f
 
-        val bundles = categoryWidgets.map { widget ->
+        val bundles = carouselWidgets.map { widget ->
             val frame = calculateWidgetFrame(widget.thisIndex)
-
+            widget.widgetFrameData = frame
             // --- 当たり判定の更新処理を追加 ---
             // 3D空間の座標をスクリーン座標に変換し、ウィジェットのプロパティに適用
-            val scaledWidth = (baseW * frame.scale).toInt()
-            val scaledHeight = (baseH * frame.scale).toInt()
+            val scaledWidth = (widgetWidth * frame.scale).toInt()
+            val scaledHeight = (widgetHeight * frame.scale).toInt()
 
             // Graphics2Dでのtranslate(sw/2, sh/2) + translate(frame.x, frame.y) に合わせる
             // 中央基準から左上基準に変換
-            widget.x = (sw / 2f + frame.x - scaledWidth / 2f).toInt()
-            widget.y = (sh / 2f + frame.y - scaledHeight / 2f).toInt()
+            widget.x = (screenWidth / 2f + frame.x - scaledWidth / 2f).toInt()
+            widget.y = (screenHeight / 2f + frame.y - scaledHeight / 2f).toInt()
             widget.width = scaledWidth
             widget.height = scaledHeight
             // ------------------------------
 
-            val g2d = WidgetGraphics2D(minecraft.deltaTracker, frame, sw, sh, baseW, baseH)
-            val resultG2d = widget.renderCustom(g2d)
+            val g2d = WidgetGraphics2D(minecraft.deltaTracker, frame, screenWidth, screenHeight)
+            val resultG2d = widget.render(g2d)
             frame.z to resultG2d.commands()
         }
-
         // 重なり順（Zオーダー）を考慮して描画
         val sortedCommands = bundles.sortedByDescending { it.first }.flatMap { it.second }
-
         renderSystem2D.render(sortedCommands)
+        carouselWidgets[pageIndex].renderWidget(guiGraphics, mouseX, mouseY, delta)
     }
 
     override fun keyPressed(keyEvent: KeyEvent): Boolean {
@@ -147,7 +155,7 @@ abstract class AbstractCarouselScreen<T>(title: Component) : Screen(title) {
 
     override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
         // Z値が手前（frame.z が小さい）のものから順にクリック判定を行う
-        val sortedWidgets = categoryWidgets.sortedBy { calculateWidgetFrame(it.thisIndex).z }
+        val sortedWidgets = carouselWidgets.sortedBy { calculateWidgetFrame(it.thisIndex).z }
         for (widget in sortedWidgets) {
             if (widget.mouseClicked(mouseButtonEvent, bl)) {
                 this.focused = widget
