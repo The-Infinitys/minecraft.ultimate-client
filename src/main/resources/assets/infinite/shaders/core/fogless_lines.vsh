@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 #moj_import <minecraft:globals.glsl>
 #moj_import <minecraft:dynamictransforms.glsl>
@@ -7,15 +7,16 @@
 in vec3 Position;
 in vec4 Color;
 in vec3 Normal;
+in float LineWidth;
 
 out vec4 vertexColor;
 
 const float VIEW_SHRINK = 1.0 - (1.0 / 256.0);
 const mat4 VIEW_SCALE = mat4(
-    VIEW_SHRINK, 0.0, 0.0, 0.0,
-    0.0, VIEW_SHRINK, 0.0, 0.0,
-    0.0, 0.0, VIEW_SHRINK, 0.0,
-    0.0, 0.0, 0.0, 1.0
+VIEW_SHRINK, 0.0, 0.0, 0.0,
+0.0, VIEW_SHRINK, 0.0, 0.0,
+0.0, 0.0, VIEW_SHRINK, 0.0,
+0.0, 0.0, 0.0, 1.0
 );
 
 void main() {

@@ -7,7 +7,7 @@ import org.joml.Matrix4f
  * 3D空間での描画命令をカプセル化するデータ構造
  */
 sealed interface RenderCommand3D {
-    data class Line(val from: Vec3, val to: Vec3, val color: Int, val size: Double) : RenderCommand3D
+    data class Line(val from: Vec3, val to: Vec3, val color: Int, val size: Float) : RenderCommand3D
     data class Triangle(
         val a: Vec3,
         val b: Vec3,

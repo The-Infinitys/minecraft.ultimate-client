@@ -48,6 +48,29 @@ class RenderSystem3D(
         )
     }
 
+    fun test() {
+        val player = minecraft.player ?: return
+        val start = player.position()
+        val end = start.add(10.0, 10.0, 10.0)
+        drawLine(start, end, 0xFFFF0000.toInt(), 2f, false)
+    }
+
+//    private val cameraPos: Vec3
+//        get() = camera.position()
+
+    fun drawLine(start: Vec3, end: Vec3, color: Int, lineWidth: Float, depthTest: Boolean = true) {
+    }
+
     fun render(commands: List<RenderCommand3D>) {
+        for (i in 0 until commands.size) {
+            when (val c = commands[i]) {
+                is RenderCommand3D.Line -> drawLine(c.from, c.to, c.color, c.size, false)
+                RenderCommand3D.PopMatrix -> TODO()
+                RenderCommand3D.PushMatrix -> TODO()
+                is RenderCommand3D.Quad -> TODO()
+                is RenderCommand3D.SetMatrix -> TODO()
+                is RenderCommand3D.Triangle -> TODO()
+            }
+        }
     }
 }

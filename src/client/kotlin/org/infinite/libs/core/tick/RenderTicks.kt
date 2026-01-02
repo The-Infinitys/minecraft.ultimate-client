@@ -95,5 +95,6 @@ object RenderTicks {
                 return@runBlocking InfiniteClient.localFeatures.onLevelRendering()
             }
         renderSystem3D.render(commands)
+        renderSystem3D.test()
     }
 }
