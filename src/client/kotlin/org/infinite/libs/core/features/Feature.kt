@@ -27,7 +27,7 @@ open class Feature : MinecraftInterface() {
 
     private val _properties: ConcurrentHashMap<String, Property<*>> = ConcurrentHashMap()
     val enabled = Property(false)
-
+    open val name: String = this::class.simpleName ?: "UnknownFeature"
     open val featureType: FeatureType = FeatureType.Utils
 
     // --- 2. 依存・矛盾関係の管理 ---
@@ -36,6 +36,7 @@ open class Feature : MinecraftInterface() {
     open val conflicts: List<KClass<out Feature>> = emptyList()
     private val listenerLock = Any()
     private val dependencyListeners = CopyOnWriteArrayList<() -> Unit>()
+
     init {
         enabled.addListener { _, isEnabled ->
             if (isEnabled) {
@@ -71,6 +72,7 @@ open class Feature : MinecraftInterface() {
             }
         }
     }
+
     open fun onEnabled() {}
     open fun onDisabled() {}
     fun enable() {

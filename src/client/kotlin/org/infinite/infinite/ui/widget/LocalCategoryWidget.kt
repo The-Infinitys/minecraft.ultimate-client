@@ -1,8 +1,6 @@
 package org.infinite.infinite.ui.widget
 
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.components.Button
-import net.minecraft.client.gui.components.StringWidget
 import net.minecraft.client.gui.layouts.LinearLayout
 import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
@@ -34,7 +32,6 @@ class LocalCategoryWidget(
     Component.translatable(category.translation()),
 ) {
     private data class WidgetComponents(
-        val titleComponent: StringWidget,
         val container: RenderableScrollableLayout,
     )
 
@@ -46,44 +43,24 @@ class LocalCategoryWidget(
         val fontManager = minecraftAccessor.fontManager as IModernFontManager
         val fontSet = fontManager.`infinite$fontSetFromIdentifier`("infinite_regular")
         val font = fromFontSet(fontSet)
-        val titleText = Component.translatable(category.translation())
         val width = parent.widgetWidth.roundToInt()
-        val titleComponentWidth = font.width(titleText)
         val titleComponentHeight = font.lineHeight
         val titleY = titleComponentHeight * 2
-        val widgetHeight = font.lineHeight
-        val title = StringWidget(
-            (width - titleComponentWidth) / 2,
-            titleY,
-            font.width(titleText),
-            widgetHeight,
-            titleText,
-            font,
-        )
         val containerMargin = 10
-        val widgetWidth = width - containerMargin
+        val widgetWidth = width - 2 * containerMargin
         val scrollY = titleY + font.lineHeight + containerMargin
-        val scrollHeight = widgetHeight - scrollY - containerMargin
         val innerLayout = LinearLayout.vertical().spacing(5)
-        val container = RenderableScrollableLayout(minecraft, innerLayout, widgetWidth)
         val containerHeight = height - scrollY - containerMargin
+        category.features.forEach { (_, feature) ->
+            innerLayout.addChild(LocalFeatureWidget(0, 0, widgetWidth, feature = feature))
+        }
+        innerLayout.arrangeElements()
+        val container = RenderableScrollableLayout(minecraft, innerLayout, widgetWidth)
         container.y = scrollY
         container.setMaxHeight(containerHeight)
         container.setMinWidth(widgetWidth)
         container.x = containerMargin
-        // 内部の縦並びレイアウト
-
-        // 仮定: category.features に含まれる各機能をボタンとして追加
-        // 実際のプロパティ名に合わせて調整してください
-        category.features.forEach { (key, feature) ->
-            val c = Component.translatable(feature.translation())
-            val button = Button.builder(c) {
-                println("Feature Clicked: ${c.string}")
-            }.size(widgetWidth - 20, 20).build()
-            innerLayout.addChild(button)
-        }
-        innerLayout.arrangeElements()
-        widgetComponents = WidgetComponents(title, container)
+        widgetComponents = WidgetComponents(container)
     }
 
     private val spawnTime = System.currentTimeMillis()
@@ -91,7 +68,6 @@ class LocalCategoryWidget(
     private val thisPageProgress = thisIndex.toFloat() / parent.pageSize
 
     init {
-        addInnerWidget(widgetComponents.titleComponent)
         addInnerWidget(widgetComponents.container)
     }
 
@@ -115,6 +91,10 @@ class LocalCategoryWidget(
         val startColor = colorScheme.color(360 * thisPageProgress, 1f, 0.5f, alpha)
         val endColor = colorScheme.color(360 * (thisPageProgress + 0.5f / parent.pageSize), 1f, 0.5f, alpha)
         graphics2D.strokeRect(0f, 0f, width, height, startColor, startColor, endColor, endColor)
+        graphics2D.textStyle.font = "infinite_regular"
+        graphics2D.textStyle.size = 16f
+        graphics2D.fillStyle = colorScheme.foregroundColor
+        graphics2D.textCentered(category.name, width / 2f, graphics2D.textStyle.size)
         return graphics2D
     }
 

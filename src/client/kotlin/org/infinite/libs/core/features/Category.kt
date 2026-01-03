@@ -9,6 +9,7 @@ abstract class Category<K : KClass<out Feature>, V : Feature> {
     // 外部からは読み取り専用、内部で PropertyDelegate から書き込み
     private val _features = ConcurrentHashMap<K, V>()
     val features: Map<K, V> get() = _features
+    open val name: String = this::class.simpleName ?: "UnknownCategory"
 
     /**
      * Featureを定義するための委譲プロバイダー
