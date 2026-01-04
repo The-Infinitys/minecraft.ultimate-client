@@ -87,20 +87,6 @@ abstract class AbstractCarouselWidget<T>(
         return MouseButtonEvent(tx, ty, this.buttonInfo)
     }
 
-    // --- 各種イベントのオーバーライド ---
-
-    override fun isMouseOver(mouseX: Double, mouseY: Double): Boolean {
-        // マウス座標をウィジェットのローカル座標系に変換してから判定
-        val (localX, localY) = (mouseX to mouseY).carouselInverseTransform()
-
-        // AbstractWidgetは本来(this.x, this.y)を基準にするが、
-        // 変換後の座標は(0, 0)から(width, height)の範囲にあるはずなので
-        // ウィジェット自身の座標オフセットを加味して判定
-        return active && visible &&
-            localX >= this.x && localX < (this.x + this.width) &&
-            localY >= this.y && localY < (this.y + this.height)
-    }
-
     public final override fun renderWidget(guiGraphics: GuiGraphics, x: Int, y: Int, delta: Float) {
         guiGraphics.carouselTransform()
 
@@ -112,29 +98,71 @@ abstract class AbstractCarouselWidget<T>(
         guiGraphics.pose().popMatrix()
     }
 
-    override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
-        // 現在のウィジェットが最前面(current)でない場合はイベントを無視するなどの制御
-        if (parent.currentWidget != this) return false
+    override fun isMouseOver(mouseX: Double, mouseY: Double): Boolean {
+        val (localX, localY) = (mouseX to mouseY).carouselInverseTransform()
+        // 座標系変換により、ウィジェット内座標は 0..width, 0..height になっている前提
+        return active && visible &&
+            localX >= 0 && localX < this.width &&
+            localY >= 0 && localY < this.height
+    }
 
-        // 変換後のイベントを渡す
+    override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
+        if (parent.currentWidget != this) return false
         val transformedEvent = mouseButtonEvent.carouselTransform()
+
+        // 子要素への伝播 (any判定)
+        for (child in children()) {
+            if (child.mouseClicked(transformedEvent, bl)) return true
+        }
+
+        // 自身のクリック判定 (onClickのトリガー)
         return super.mouseClicked(transformedEvent, bl)
     }
 
-    // 他のイベントも同様に .carouselTransform() を適用
     override fun mouseMoved(d: Double, e: Double) {
         val (tx, ty) = (d to e).carouselInverseTransform()
+
+        for (child in children()) {
+            child.mouseMoved(tx, ty)
+        }
         super.mouseMoved(tx, ty)
     }
 
     override fun mouseDragged(mouseButtonEvent: MouseButtonEvent, d: Double, e: Double): Boolean {
         val transformedEvent = mouseButtonEvent.carouselTransform()
         val (tx, ty) = (d to e).carouselInverseTransform()
+
+        for (child in children()) {
+            if (child.mouseDragged(transformedEvent, tx, ty)) return true
+        }
         return super.mouseDragged(transformedEvent, tx, ty)
     }
 
     override fun mouseReleased(mouseButtonEvent: MouseButtonEvent): Boolean {
-        return super.mouseReleased(mouseButtonEvent.carouselTransform())
+        val transformedEvent = mouseButtonEvent.carouselTransform()
+
+        for (child in children()) {
+            if (child.mouseReleased(transformedEvent)) return true
+        }
+        return super.mouseReleased(transformedEvent)
+    }
+
+    override fun mouseScrolled(
+        mouseX: Double,
+        mouseY: Double,
+        horizontalAmount: Double,
+        verticalAmount: Double,
+    ): Boolean {
+        val (tx, ty) = (mouseX to mouseY).carouselInverseTransform()
+
+        // 1. まずは子要素（IScrollableLayoutなど）にスクロールを渡す
+        for (child in children()) {
+            if (child.mouseScrolled(tx, ty, horizontalAmount, verticalAmount)) return true
+        }
+
+        // 2. 子要素が処理しなかった場合、カルーセルのページ切り替えを行う
+        if (verticalAmount > 0) parent.pageIndex-- else if (verticalAmount < 0) parent.pageIndex++
+        return true
     }
 
     // --- 既存の abstract / メソッド ---
@@ -148,16 +176,6 @@ abstract class AbstractCarouselWidget<T>(
 
     override fun updateWidgetNarration(narrationElementOutput: NarrationElementOutput) {
         this.defaultButtonNarrationText(narrationElementOutput)
-    }
-
-    override fun mouseScrolled(
-        mouseX: Double,
-        mouseY: Double,
-        horizontalAmount: Double,
-        verticalAmount: Double,
-    ): Boolean {
-        if (verticalAmount > 0) parent.pageIndex-- else if (verticalAmount < 0) parent.pageIndex++
-        return true
     }
 
     override fun contentHeight(): Int = this.height

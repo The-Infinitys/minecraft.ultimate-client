@@ -2,6 +2,7 @@ package org.infinite.infinite.ui.widget
 
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.layouts.LinearLayout
+import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.categories.category.LocalCategory
@@ -71,7 +72,6 @@ class LocalCategoryWidget(
 
     init {
         addInnerWidget(widgetComponents.container)
-        LogSystem.log("${children().size}")
     }
 
     override fun render(graphics2D: AbstractCarouselScreen.WidgetGraphics2D): AbstractCarouselScreen.WidgetGraphics2D {
@@ -103,5 +103,10 @@ class LocalCategoryWidget(
 
     override fun onSelected(data: LocalCategory) {
         println("Selected: ${data.translation()}")
+    }
+
+    override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
+        LogSystem.log("WED")
+        return super.mouseClicked(mouseButtonEvent, bl)
     }
 }
