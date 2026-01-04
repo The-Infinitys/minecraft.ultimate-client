@@ -49,10 +49,11 @@ class LocalCategoryWidget(
         val containerMargin = 10
         val widgetWidth = width - 2 * containerMargin
         val scrollY = titleY + font.lineHeight + containerMargin
-        val innerLayout = LinearLayout.vertical().spacing(5)
+        val innerSpacing = 5
+        val innerLayout = LinearLayout.vertical().spacing(innerSpacing)
         val containerHeight = height - scrollY - containerMargin
         category.features.forEach { (_, feature) ->
-            innerLayout.addChild(LocalFeatureWidget(0, 0, widgetWidth, feature = feature))
+            innerLayout.addChild(LocalFeatureWidget(0, 0, widgetWidth - 2 * innerSpacing, feature = feature))
         }
         innerLayout.arrangeElements()
         val container = RenderableScrollableLayout(minecraft, innerLayout, widgetWidth)

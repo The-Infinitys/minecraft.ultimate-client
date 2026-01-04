@@ -23,7 +23,6 @@ open class Feature : MinecraftInterface() {
 
     // --- 1. 定義とステータス ---
     enum class FeatureType { Utils, Extend, Cheat }
-    enum class Timing { Start, End }
 
     private val _properties: ConcurrentHashMap<String, Property<*>> = ConcurrentHashMap()
     val enabled = Property(false)
@@ -89,7 +88,12 @@ open class Feature : MinecraftInterface() {
 
     fun isEnabled(): Boolean = enabled.value
     fun toggle() = if (isEnabled()) disable() else enable()
-
+    fun reset() {
+        _properties.forEach { prop ->
+            prop.value.reset()
+        }
+        disable()
+    }
     private fun startResolver() = synchronized(listenerLock) {
         val cat = categoryClass ?: return@synchronized
 
