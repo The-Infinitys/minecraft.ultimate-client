@@ -42,15 +42,24 @@ class FeatureResetButton(x: Int, y: Int, width: Int, height: Int, feature: Featu
         // 1. 時間パラメータの取得 (0.0 ~ 1.0)
         val duration = 2000.0 // 2秒で1サイクル
         val t = (System.currentTimeMillis() % duration) / duration
-
         val colorScheme = InfiniteClient.theme.colorScheme
-        val accentColor = colorScheme.accentColor // アクセントカラーを使用
+        val color = colorScheme.accentColor
         val centerX = x + width / 2f
         val centerY = y + height / 2f
-        val radius = (width.coerceAtMost(height) / 2f) * 0.7f // 少し余白を持たせる
         val angle = 2.0 * PI * t
         val angleF = angle.toFloat()
+        val rX = width / 3f
+        val rY = height / 3f
+        val r = (rX + rY) / 2f
         this.push()
+        this.rotateAt(angleF, centerX, centerY)
+        this.fillStyle = color
+        this.fillTriangle(centerX, centerY, centerX, centerY - rY * 2, centerX + rX, centerY - rY)
+        this.beginPath()
+        this.strokeStyle.width = 2f
+        this.strokeStyle.color = color
+        this.arc(centerX, centerY, r, (PI / 2.0).toFloat(), (3.0 * PI / 2.0).toFloat())
+        this.strokePath()
         this.pop()
     }
 
