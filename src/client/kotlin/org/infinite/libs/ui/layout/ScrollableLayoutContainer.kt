@@ -11,7 +11,7 @@ import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 
-class IScrollableLayout(
+class ScrollableLayoutContainer(
     minecraft: Minecraft,
     layout: Layout,
     i: Int,
