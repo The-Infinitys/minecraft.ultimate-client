@@ -26,6 +26,7 @@ class LocalFeatureWidget(
     private data class WidgetComponents(
         val resetButton: FeatureResetButton,
         val settingButton: FeatureSettingButton,
+        val toggleButton: FeatureToggleButton,
     )
 
     private val widgetComponents: WidgetComponents
@@ -34,8 +35,8 @@ class LocalFeatureWidget(
         // 初期化時は一時的な座標で作成
         val resetButton = FeatureResetButton(0, 0, 0, 0, feature)
         val settingButton = FeatureSettingButton(0, 0, 0, 0, feature)
-        widgetComponents = WidgetComponents(resetButton, settingButton)
-        // 現在の x, y, width, height に基づいて子要素を配置
+        val toggleButton = FeatureToggleButton(0, 0, 0, 0, feature)
+        widgetComponents = WidgetComponents(resetButton, settingButton, toggleButton)
         relocateChildren()
     }
 
@@ -46,20 +47,21 @@ class LocalFeatureWidget(
         val buttonSize = this.height - PADDING
         val buttonY = this.y + PADDING / 2
 
-        // Reset Button の位置 (右から2番目)
-        widgetComponents.resetButton.x = this.x + this.width - 2 * PADDING - 2 * buttonSize
+        widgetComponents.resetButton.x = this.x + this.width - 3 * PADDING - 3 * buttonSize
         widgetComponents.resetButton.y = buttonY
         widgetComponents.resetButton.width = buttonSize
         widgetComponents.resetButton.height = buttonSize
 
-        // Setting Button の位置 (一番右)
-        widgetComponents.settingButton.x = this.x + this.width - PADDING - buttonSize
+        widgetComponents.settingButton.x = this.x + this.width - 2 * PADDING - 2 * buttonSize
         widgetComponents.settingButton.y = buttonY
         widgetComponents.settingButton.width = buttonSize
         widgetComponents.settingButton.height = buttonSize
-    }
 
-    // --- 座標変更の検知 ---
+        widgetComponents.toggleButton.x = this.x + this.width - PADDING - buttonSize
+        widgetComponents.toggleButton.y = buttonY
+        widgetComponents.toggleButton.width = buttonSize
+        widgetComponents.toggleButton.height = buttonSize
+    }
 
     override fun setX(x: Int) {
         super.setX(x)
@@ -109,48 +111,54 @@ class LocalFeatureWidget(
 
         widgetComponents.resetButton.render(graphics2DRenderer)
         widgetComponents.settingButton.render(graphics2DRenderer)
-
+        widgetComponents.toggleButton.render(graphics2DRenderer)
         graphics2DRenderer.flush()
     }
 
     override fun onClick(mouseButtonEvent: MouseButtonEvent, bl: Boolean) {
         widgetComponents.resetButton.onClick(mouseButtonEvent, bl)
         widgetComponents.settingButton.onClick(mouseButtonEvent, bl)
+        widgetComponents.toggleButton.onClick(mouseButtonEvent, bl)
         super.onClick(mouseButtonEvent, bl)
     }
 
     override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
         widgetComponents.resetButton.onClick(mouseButtonEvent, bl)
         widgetComponents.settingButton.onClick(mouseButtonEvent, bl)
+        widgetComponents.toggleButton.onClick(mouseButtonEvent, bl)
         return super.mouseClicked(mouseButtonEvent, bl)
     }
 
     override fun mouseDragged(mouseButtonEvent: MouseButtonEvent, d: Double, e: Double): Boolean {
         widgetComponents.resetButton.mouseDragged(mouseButtonEvent, d, e)
         widgetComponents.settingButton.mouseDragged(mouseButtonEvent, d, e)
+        widgetComponents.toggleButton.mouseDragged(mouseButtonEvent, d, e)
         return super.mouseDragged(mouseButtonEvent, d, e)
     }
 
     override fun mouseMoved(d: Double, e: Double) {
         widgetComponents.resetButton.mouseMoved(d, e)
         widgetComponents.settingButton.mouseMoved(d, e)
+        widgetComponents.toggleButton.mouseMoved(d, e)
         return super.mouseMoved(d, e)
     }
 
     override fun mouseScrolled(d: Double, e: Double, f: Double, g: Double): Boolean {
         widgetComponents.resetButton.mouseScrolled(d, e, f, g)
         widgetComponents.settingButton.mouseScrolled(d, e, f, g)
+        widgetComponents.toggleButton.mouseScrolled(d, e, f, g)
         return super.mouseScrolled(d, e, f, g)
     }
 
     override fun mouseReleased(mouseButtonEvent: MouseButtonEvent): Boolean {
         widgetComponents.resetButton.mouseReleased(mouseButtonEvent)
         widgetComponents.settingButton.mouseReleased(mouseButtonEvent)
+        widgetComponents.toggleButton.mouseReleased(mouseButtonEvent)
         return super.mouseReleased(mouseButtonEvent)
     }
 
     override fun children(): List<GuiEventListener> =
-        listOf(widgetComponents.resetButton, widgetComponents.settingButton)
+        listOf(widgetComponents.resetButton, widgetComponents.settingButton, widgetComponents.toggleButton)
 
     override fun contentHeight(): Int = height
     override fun scrollRate(): Double = 10.0

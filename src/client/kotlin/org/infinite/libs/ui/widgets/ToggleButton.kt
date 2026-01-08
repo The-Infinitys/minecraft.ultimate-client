@@ -4,63 +4,60 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.Button
 import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
+import org.infinite.libs.graphics.Graphics2D
+import org.infinite.libs.graphics.bundle.Graphics2DRenderer
+import org.infinite.libs.log.LogSystem
 import kotlin.math.sin
 
-class ToggleButton(
+abstract class ToggleButton(
     x: Int,
     y: Int,
     width: Int,
     height: Int,
-    private var state: Boolean,
-    private var isEnabled: Boolean,
-    private val onToggle: (Boolean) -> Unit,
 ) : Button(
     x,
     y,
     width,
     height,
-    Component.empty(), // ラベルは空（描画ロジックでカスタムするため）
+    Component.empty(),
     { button ->
-        // --- onPressのコンストラクタに処理を移動 ---
         val tb = button as ToggleButton
-        if (tb.isEnabled) {
-            tb.state = !tb.state
-            tb.onToggle(tb.state)
-            tb.animationStartTime = System.currentTimeMillis()
-        }
+        tb.value = !tb.value
+        LogSystem.log("WED")
+        tb.animationStartTime = System.currentTimeMillis()
     },
     DEFAULT_NARRATION,
 ) {
+    protected abstract var value: Boolean
+
     private var animationStartTime: Long = -1L
     private val animationDuration = 200L
 
-    override fun renderContents(
-        context: GuiGraphics,
-        mouseX: Int,
-        mouseY: Int,
-        delta: Float,
-    ) {
+    /**
+     * Graphics2D を使用したカスタム描画ロジック
+     */
+    fun render(graphics2D: Graphics2D) {
         val colorScheme = InfiniteClient.theme.colorScheme
 
-        // 背景色の決定
+        // 1. 背景バーの描画設定
         val backgroundColor = when {
-            !isEnabled -> colorScheme.backgroundColor
-            state -> if (isHovered) colorScheme.greenColor else colorScheme.accentColor
+            !active -> colorScheme.backgroundColor
+            value -> if (isHovered) colorScheme.greenColor else colorScheme.accentColor
             else -> if (isHovered) colorScheme.secondaryColor else colorScheme.backgroundColor
         }
 
-        val knobSize = height - 4
-        val barWidth = (knobSize * 2).toFloat()
+        val knobSize = height - 4f
+        val barWidth = knobSize * 2f
         val barHeight = height.toFloat() / 2.5f
-        val barY = (y + (height - barHeight.toInt()) / 2).toFloat()
-        val barX = (x + (width - barWidth.toInt()) / 2).toFloat()
+        val barX = x + (width - barWidth) / 2f
+        val barY = y + (height - barHeight) / 2f
 
-        // 背景バーの描画
-        context.fill(barX.toInt(), barY.toInt(), (barX + barWidth).toInt(), (barY + barHeight).toInt(), backgroundColor)
+        graphics2D.fillStyle = backgroundColor
+        graphics2D.fillRect(barX, barY, barWidth, barHeight)
 
-        // アニメーション計算
-        val startKnobX = if (!state) barX + barWidth - knobSize - 2 else barX + 2
-        val endKnobX = if (state) barX + barWidth - knobSize - 2 else barX + 2
+        // 2. アニメーション計算
+        val startKnobX = if (!value) barX + barWidth - knobSize - 2f else barX + 2f
+        val endKnobX = if (value) barX + barWidth - knobSize - 2f else barX + 2f
 
         val currentKnobX = if (animationStartTime == -1L) {
             endKnobX
@@ -76,21 +73,32 @@ class ToggleButton(
             }
         }
 
-        val knobY = (y + 2).toFloat()
-        val knobBorder = 2
-        val knobBorderColor = if (isEnabled) colorScheme.accentColor else colorScheme.backgroundColor
-        val knobInnerColor = if (isHovered) colorScheme.accentColor else colorScheme.foregroundColor
+        // 3. ノブの描画
+        val knobY = y + 2f
+        val knobBorder = 2f
 
         // 外枠ノブ
-        context.fill(currentKnobX.toInt(), knobY.toInt(), (currentKnobX + knobSize).toInt(), (knobY + knobSize).toInt(), knobBorderColor)
+        graphics2D.fillStyle = if (active) colorScheme.accentColor else colorScheme.backgroundColor
+        graphics2D.fillRect(currentKnobX, knobY, knobSize, knobSize)
 
         // 内側ノブ
-        context.fill(
-            (currentKnobX + knobBorder).toInt(),
-            (knobY + knobBorder).toInt(),
-            (currentKnobX + knobSize - knobBorder).toInt(),
-            (knobY + knobSize - knobBorder).toInt(),
-            knobInnerColor,
+        graphics2D.fillStyle = if (isHovered) colorScheme.accentColor else colorScheme.foregroundColor
+        graphics2D.fillRect(
+            currentKnobX + knobBorder,
+            knobY + knobBorder,
+            knobSize - (knobBorder * 2),
+            knobSize - (knobBorder * 2),
         )
+    }
+
+    override fun renderContents(
+        guiGraphics: GuiGraphics,
+        mouseX: Int,
+        mouseY: Int,
+        delta: Float,
+    ) {
+        val graphics2DRenderer = Graphics2DRenderer(guiGraphics)
+        render(graphics2DRenderer)
+        graphics2DRenderer.flush()
     }
 }
