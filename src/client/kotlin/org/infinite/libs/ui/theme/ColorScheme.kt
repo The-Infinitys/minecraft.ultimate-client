@@ -26,7 +26,7 @@ open class ColorScheme {
         get() = blueColor // または color(210f, 0.8f, 0.6f, 1f)
 
     // 非活性（Disabled）なテキスト
-    open val secondaryTextColor: Int
+    open val secondaryColor: Int
         get() = color(0f, 0f, 0.5f, 1f) // 中間グレー
 
     // --- 追加: 状態変化用ヘルパー ---
