@@ -9,18 +9,17 @@ import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.Property
 import org.infinite.libs.graphics.bundle.Graphics2DRenderer
-import org.infinite.libs.log.LogSystem
 
 open class PropertyWidget<T : Property<*>>(
     x: Int,
     y: Int,
     width: Int,
     height: Int = DEFAULT_WIDGET_HEIGHT,
-    private val property: T,
+    protected val property: T,
 ) :
     AbstractContainerWidget(x, y, width, height, Component.literal("")), Renderable {
     companion object {
-        private const val DEFAULT_WIDGET_HEIGHT = 20
+        protected const val DEFAULT_WIDGET_HEIGHT = 20
     }
 
     override fun contentHeight(): Int = this.height
@@ -30,6 +29,42 @@ open class PropertyWidget<T : Property<*>>(
     override fun children(): List<GuiEventListener> =
         listOf()
 
+    override fun setWidth(i: Int) {
+        super.setWidth(i)
+        relocate()
+    }
+
+    override fun setHeight(i: Int) {
+        super.setHeight(i)
+        relocate()
+    }
+
+    override fun setX(i: Int) {
+        super.setX(i)
+        relocate()
+    }
+
+    override fun setY(i: Int) {
+        super.setY(i)
+        relocate()
+    }
+
+    override fun setSize(i: Int, j: Int) {
+        super.setSize(i, j)
+        relocate()
+    }
+
+    override fun setPosition(i: Int, j: Int) {
+        super.setPosition(i, j)
+        relocate()
+    }
+
+    override fun setRectangle(i: Int, j: Int, k: Int, l: Int) {
+        super.setRectangle(i, j, k, l)
+        relocate()
+    }
+
+    protected open fun relocate() {}
     override fun mouseScrolled(d: Double, e: Double, f: Double, g: Double): Boolean {
         return super.mouseScrolled(d, e, f, g)
     }
@@ -52,7 +87,6 @@ open class PropertyWidget<T : Property<*>>(
         g2d.text(name, x, y)
         g2d.textStyle.size = 8f
         g2d.fillStyle = colorScheme.secondaryColor
-        LogSystem.log("RENDER")
         g2d.text(description, x.toFloat(), y + height - g2d.textStyle.size)
         g2d.flush()
     }

@@ -1,6 +1,8 @@
 package org.infinite.libs.core.features.property
 
 import org.infinite.libs.core.features.Property
+import org.infinite.libs.ui.widgets.BooleanPropertyWidget
+import org.infinite.libs.ui.widgets.PropertyWidget
 
 /**
  * ON/OFFを管理するプロパティ
@@ -15,5 +17,9 @@ class BooleanProperty(
      */
     fun toggle() {
         value = !value
+    }
+
+    override fun widget(x: Int, y: Int, width: Int): PropertyWidget<*> {
+        return BooleanPropertyWidget(x, y, width, property = this)
     }
 }

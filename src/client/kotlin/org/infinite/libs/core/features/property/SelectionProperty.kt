@@ -5,7 +5,7 @@ import org.infinite.libs.core.features.Property
 /**
  * 複数の選択肢から1つを選択するプロパティ
  */
-open class SelectionProperty<T>(
+open class SelectionProperty<T : Any>(
     default: T,
     opts: List<T>,
 ) : Property<T>(default) {

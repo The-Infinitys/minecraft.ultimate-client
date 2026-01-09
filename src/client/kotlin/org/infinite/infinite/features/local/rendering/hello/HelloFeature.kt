@@ -1,7 +1,7 @@
 package org.infinite.infinite.features.local.rendering.hello
 
 import org.infinite.libs.core.features.feature.LocalFeature
-import org.infinite.libs.core.features.property.number.IntProperty
+import org.infinite.libs.core.features.property.BooleanProperty
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.Graphics3D
 import org.infinite.libs.graphics.graphics2d.structs.StrokeStyle
@@ -15,7 +15,7 @@ class HelloFeature : LocalFeature() {
     override val defaultToggleKey: Int = GLFW.GLFW_KEY_F
 
     @Suppress("Unused")
-    val hello by property(IntProperty(1, 1, 100))
+    val hello by property(BooleanProperty(false))
 
     init {
         enable()

@@ -1,10 +1,11 @@
 package org.infinite.libs.core.features
 
+import org.infinite.libs.log.LogSystem
 import org.infinite.libs.ui.widgets.PropertyWidget
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicReference
 
-open class Property<T>(
+open class Property<T : Any>(
     val default: T,
 ) {
     // 追加: 自身の名称と親Featureの参照
@@ -12,7 +13,7 @@ open class Property<T>(
         internal set
     var parent: Feature? = null
         internal set
-
+    private val valueType = default::class.java
     private val _value = AtomicReference<T>(default)
     private val listeners = CopyOnWriteArrayList<(oldValue: T, newValue: T) -> Unit>()
 
@@ -46,6 +47,41 @@ open class Property<T>(
         listeners.forEach { it(oldValue, newValue) }
     }
 
-    open fun widget(x: Int, y: Int, width: Int): PropertyWidget<Property<T>> =
+    fun tryApply(anyValue: Any?) {
+        if (anyValue == null) return
+
+        // 1. 実行時の型チェック (T の情報を活用)
+        if (valueType.isInstance(anyValue)) {
+            @Suppress("UNCHECKED_CAST")
+            this.value = anyValue as T
+            return
+        }
+
+        // 2. 型が合わない場合の「賢い」変換
+        // T (type) が Boolean か Int か等で分岐
+        @Suppress("UNCHECKED_CAST")
+        val converted: T? = when (default) {
+            is Boolean -> when (anyValue) {
+                is Number -> (anyValue.toLong() != 0L) as? T
+                is String -> anyValue.toBoolean() as? T
+                else -> null
+            }
+
+            is Int -> (anyValue as? Number)?.toInt() as? T
+            is Long -> (anyValue as? Number)?.toLong() as? T
+            is Float -> (anyValue as? Number)?.toFloat() as? T
+            is Double -> (anyValue as? Number)?.toDouble() as? T
+            is String -> anyValue.toString() as? T
+            else -> null
+        }
+
+        if (converted != null) {
+            this.value = converted
+        } else {
+            LogSystem.warn("Property '$name': Type mismatch. Expected ${valueType.simpleName}, got ${anyValue::class.simpleName}")
+        }
+    }
+
+    open fun widget(x: Int, y: Int, width: Int): PropertyWidget<*> =
         PropertyWidget(x, y, width, property = this)
 }

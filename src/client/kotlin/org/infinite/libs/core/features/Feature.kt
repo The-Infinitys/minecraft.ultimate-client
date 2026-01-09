@@ -64,9 +64,9 @@ open class Feature : MinecraftInterface() {
     }
 
     // --- 3. プロパティ委譲ロジック ---
-    protected fun <T, P : Property<T>> property(property: P): PropertyDelegate<T, P> = PropertyDelegate(property)
+    protected fun <T : Any, P : Property<T>> property(property: P): PropertyDelegate<T, P> = PropertyDelegate(property)
 
-    protected inner class PropertyDelegate<T, P : Property<T>>(val property: P) {
+    protected inner class PropertyDelegate<T : Any, P : Property<T>>(val property: P) {
         operator fun getValue(thisRef: Feature, prop: KProperty<*>): P {
             register(prop.name, property)
             return property
@@ -164,7 +164,7 @@ open class Feature : MinecraftInterface() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> set(name: String, value: T) {
+    fun <T : Any> set(name: String, value: T) {
         ensureAllPropertiesRegistered()
         val prop = _properties[name] ?: _properties.entries.find { it.key.toLowerSnakeCase() == name }?.value
         (prop as? Property<T>)?.value = value

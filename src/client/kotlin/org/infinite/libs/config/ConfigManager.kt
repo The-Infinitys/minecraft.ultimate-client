@@ -1,9 +1,21 @@
 package org.infinite.libs.config
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.longOrNull
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.Feature
 import org.infinite.libs.interfaces.MinecraftInterface
@@ -169,8 +181,6 @@ object ConfigManager : MinecraftInterface() {
         data.forEach { (categoryName, featuresMap) ->
             if (featuresMap !is Map<*, *>) return@forEach
 
-            // 1. カテゴリの検索ロジックを修正
-            // data() メソッドの生成ロジック（パッケージ名の最後から2番目）と一致させる
             val category = categoriesObj.categories.values.find { cat ->
                 val id = cat::class.qualifiedName?.split(".")?.let {
                     if (it.size >= 2) it[it.size - 2].toLowerSnakeCase() else null
@@ -181,26 +191,42 @@ object ConfigManager : MinecraftInterface() {
             featuresMap.forEach { (featureName, featureDataRaw) ->
                 val featureData = featureDataRaw as? Map<*, *> ?: return@forEach
 
-                // 2. Featureの検索ロジックを修正
-                // simpleName ではなく、実際に data() で使っている ID 生成ロジックに合わせる
                 val feature = category.features.values.find { feat ->
                     feat::class.simpleName?.toLowerSnakeCase() == featureName.toString()
                 } ?: return@forEach
 
-                // 3. Enabled 状態の復元
-                val isEnabled = featureData["enabled"] as? Boolean ?: false
-                if (isEnabled) feature.enable() else feature.disable()
+                // --- セーフティチェック: Enabled ---
+                val isEnabled = when (val rawEnabled = featureData["enabled"]) {
+                    is Boolean -> rawEnabled
+                    is String -> rawEnabled.toBoolean()
+                    is Number -> rawEnabled.toInt() != 0
+                    else -> null // 不明な場合はデフォルト（現状維持）にするため null
+                }
 
-                // 4. Properties の復元
+                // 読み込みに成功した場合のみ適用、失敗（null）ならデフォルトのまま
+                isEnabled?.let { if (it) feature.enable() else feature.disable() }
+
+                // --- セーフティチェック: Properties ---
                 val props = featureData["properties"] as? Map<*, *> ?: return@forEach
                 props.forEach { (propName, value) ->
-                    if (propName is String) {
-                        // 内部で toLowerSnakeCase な名前でも検索できるように set 側が対応している必要があります
-                        feature.set(propName, value)
+                    if (propName is String && value != null) {
+                        try {
+                            applyPropertySafely(feature, propName, value)
+                        } catch (e: Exception) {
+                            LogSystem.error("Failed to apply property $propName for $featureName: ${e.message}")
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * プロパティの型に合わせて値を安全にキャスト・変換して適用する
+     */
+    private fun applyPropertySafely(feature: Feature, propName: String, value: Any) {
+        val property = feature.properties[propName] ?: return
+        property.tryApply(value)
     }
 
     private fun getLocalPath(): String? {
