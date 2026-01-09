@@ -39,7 +39,7 @@ class FeatureScreen<T : Feature>(
 
         // 2. スクロールコンテナの初期化
         // i (高さ) はコンテンツを表示できる最大範囲を指定
-        container = ScrollableLayoutContainer(minecraft!!, innerLayout, innerWidth).apply {
+        container = ScrollableLayoutContainer(minecraft, innerLayout, innerWidth).apply {
             this.x = margin
             this.y = headerHeight
             this.setMinWidth(innerWidth)
@@ -75,6 +75,6 @@ class FeatureScreen<T : Feature>(
     }
 
     override fun onClose() {
-        minecraft?.setScreen(parent)
+        minecraft.setScreen(parent)
     }
 }
