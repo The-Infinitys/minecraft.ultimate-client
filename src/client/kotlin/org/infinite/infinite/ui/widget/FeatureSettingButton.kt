@@ -1,9 +1,11 @@
 package org.infinite.infinite.ui.widget
 
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.Button
 import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
+import org.infinite.infinite.ui.screen.FeatureScreen
 import org.infinite.libs.core.features.Feature
 import org.infinite.libs.graphics.Graphics2D
 import org.infinite.libs.graphics.bundle.Graphics2DRenderer
@@ -20,12 +22,16 @@ class FeatureSettingButton(x: Int, y: Int, width: Int, height: Int, feature: Fea
         height,
         Component.empty(), // ラベルは空に
         { button ->
+            val mc = Minecraft.getInstance()
             val self = button as FeatureSettingButton
-            // --- 追加: クリック時にアニメーション開始時刻を記録 ---
             self.clickAnimStartTime = System.currentTimeMillis()
 
-            // feature.reset() が入っていましたが、本来は設定画面を開く等の処理かと思います
-            // feature.openSettings()
+            // 修正ポイント: execute を使用してメインスレッドのキューに送る
+            mc.execute {
+                mc.screen?.let { currentScreen ->
+                    mc.setScreen(FeatureScreen(feature, currentScreen))
+                }
+            }
         },
         DEFAULT_NARRATION,
     ) {

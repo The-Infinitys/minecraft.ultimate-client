@@ -6,6 +6,8 @@ import net.minecraft.client.gui.components.Renderable
 import net.minecraft.client.gui.components.ScrollableLayout
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.layouts.Layout
+import net.minecraft.client.gui.narration.NarratableEntry
+import net.minecraft.client.gui.narration.NarrationElementOutput
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.KeyEvent
@@ -15,7 +17,7 @@ class ScrollableLayoutContainer(
     minecraft: Minecraft,
     layout: Layout,
     i: Int,
-) : ScrollableLayout(minecraft, layout, i), Renderable, GuiEventListener {
+) : ScrollableLayout(minecraft, layout, i), Renderable, GuiEventListener, NarratableEntry {
 
     override fun render(guiGraphics: GuiGraphics, i: Int, j: Int, f: Float) {
         visitWidgets { widget ->
@@ -124,4 +126,8 @@ class ScrollableLayoutContainer(
     }
 
     override fun isFocused(): Boolean = focused
+    override fun narrationPriority(): NarratableEntry.NarrationPriority = NarratableEntry.NarrationPriority.FOCUSED
+
+    override fun updateNarration(narrationElementOutput: NarrationElementOutput) {
+    }
 }

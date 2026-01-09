@@ -30,9 +30,13 @@ open class Feature : MinecraftInterface() {
     // 外部公開用（順序が維持された Map が返る）
     val properties: Map<String, Property<*>> get() = _properties
 
+    // Feature.kt 内の register メソッドを修正
     private fun register(name: String, property: Property<*>) {
-        // LinkedHashMap なので、最初に追加された順序が守られる
         if (!_properties.containsKey(name)) {
+            // Property側に情報を注入
+            property.name = name.toLowerSnakeCase()
+            property.parent = this
+
             _properties[name] = property
         }
     }
