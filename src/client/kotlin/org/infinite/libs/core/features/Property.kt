@@ -48,37 +48,73 @@ open class Property<T : Any>(
     }
 
     fun tryApply(anyValue: Any?) {
-        if (anyValue == null) return
+        val className = anyValue?.let { it::class.simpleName } ?: "null"
 
-        // 1. 実行時の型チェック (T の情報を活用)
+        if (anyValue == null) {
+            LogSystem.warn("[Property:$name] Received null value, skipping.")
+            return
+        }
+
+        // 1. 直接キャスト可能な場合のチェック
         if (valueType.isInstance(anyValue)) {
             @Suppress("UNCHECKED_CAST")
             this.value = anyValue as T
             return
         }
 
-        // 2. 型が合わない場合の「賢い」変換
-        // T (type) が Boolean か Int か等で分岐
+        // 2. 型変換の試行
         @Suppress("UNCHECKED_CAST")
-        val converted: T? = when (default) {
-            is Boolean -> when (anyValue) {
-                is Number -> (anyValue.toLong() != 0L) as? T
-                is String -> anyValue.toBoolean() as? T
-                else -> null
+        val converted: Any? = when (valueType) {
+            Int::class.javaObjectType, Int::class.java -> {
+                val res = (anyValue as? Number)?.toInt()
+                res
             }
 
-            is Int -> (anyValue as? Number)?.toInt() as? T
-            is Long -> (anyValue as? Number)?.toLong() as? T
-            is Float -> (anyValue as? Number)?.toFloat() as? T
-            is Double -> (anyValue as? Number)?.toDouble() as? T
-            is String -> anyValue.toString() as? T
-            else -> null
+            Long::class.javaObjectType, Long::class.java -> {
+                val res = (anyValue as? Number)?.toLong()
+                res
+            }
+
+            Float::class.javaObjectType, Float::class.java -> {
+                val res = (anyValue as? Number)?.toFloat()
+                res
+            }
+
+            Double::class.javaObjectType, Double::class.java -> {
+                val res = (anyValue as? Number)?.toDouble()
+                res
+            }
+
+            Boolean::class.javaObjectType, Boolean::class.java -> {
+                val res = when (anyValue) {
+                    is Boolean -> anyValue
+                    is Number -> anyValue.toLong() != 0L
+                    is String -> anyValue.toBoolean()
+                    else -> null
+                }
+                res
+            }
+
+            String::class.java -> {
+                val res = anyValue.toString()
+                res
+            }
+
+            else -> {
+                LogSystem.warn("[Property:$name] No conversion rule defined for target type ${valueType.simpleName}")
+                null
+            }
         }
 
         if (converted != null) {
-            this.value = converted
+            try {
+                @Suppress("UNCHECKED_CAST")
+                this.value = converted as T
+            } catch (e: Exception) {
+                LogSystem.error("[Property:$name] Failed to cast converted value to T: ${e.message}")
+            }
         } else {
-            LogSystem.warn("Property '$name': Type mismatch. Expected ${valueType.simpleName}, got ${anyValue::class.simpleName}")
+            LogSystem.error("[Property:$name] Conversion failed. Value '$anyValue' ($className) is incompatible with ${valueType.simpleName}")
         }
     }
 

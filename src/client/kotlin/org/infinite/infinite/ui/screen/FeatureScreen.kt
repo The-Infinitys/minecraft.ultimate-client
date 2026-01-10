@@ -7,7 +7,6 @@ import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.Feature
 import org.infinite.libs.graphics.bundle.Graphics2DRenderer
-import org.infinite.libs.log.LogSystem
 import org.infinite.libs.ui.layout.ScrollableLayoutContainer
 
 class FeatureScreen<T : Feature>(
@@ -29,7 +28,6 @@ class FeatureScreen<T : Feature>(
 
         feature.properties.forEach { (_, property) ->
             val propertyWidget = property.widget(0, 0, innerWidth)
-            LogSystem.log("PROPERTY: ${property.name}")
             innerLayout.addChild(propertyWidget)
         }
         innerLayout.arrangeElements()
@@ -39,10 +37,11 @@ class FeatureScreen<T : Feature>(
             this.setMinWidth(innerWidth)
             this.setMaxHeight(height - headerHeight - margin)
         }
-//        this.addRenderableWidget(container)
+        this.addRenderableWidget(container)
     }
 
     override fun render(guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+        super.render(guiGraphics, mouseX, mouseY, delta)
         val g2d = Graphics2DRenderer(guiGraphics)
         val theme = InfiniteClient.theme
         val colorScheme = theme.colorScheme
@@ -60,7 +59,6 @@ class FeatureScreen<T : Feature>(
         g2d.textCentered(feature.name, centerX, size)
         g2d.flush()
         container.render(guiGraphics, mouseX, mouseY, delta)
-        super.render(guiGraphics, mouseX, mouseY, delta)
     }
 
     override fun onClose() {

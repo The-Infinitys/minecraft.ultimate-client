@@ -18,6 +18,7 @@ import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.Feature
+import org.infinite.libs.core.features.Property
 import org.infinite.libs.interfaces.MinecraftInterface
 import org.infinite.libs.log.LogSystem
 import org.infinite.utils.toLowerSnakeCase
@@ -179,42 +180,38 @@ object ConfigManager : MinecraftInterface() {
         data: Map<String, Any?>,
     ) {
         data.forEach { (categoryName, featuresMap) ->
-            if (featuresMap !is Map<*, *>) return@forEach
+            if (featuresMap !is Map<*, *>) {
+                return@forEach
+            }
 
+            // 1. カテゴリの検索ログ
             val category = categoriesObj.categories.values.find { cat ->
                 val id = cat::class.qualifiedName?.split(".")?.let {
                     if (it.size >= 2) it[it.size - 2].toLowerSnakeCase() else null
                 }
                 id == categoryName
-            } ?: return@forEach
+            } ?: run {
+                return@forEach
+            }
 
             featuresMap.forEach { (featureName, featureDataRaw) ->
                 val featureData = featureDataRaw as? Map<*, *> ?: return@forEach
-
+                // 2. 機能（Feature）の検索ログ
                 val feature = category.features.values.find { feat ->
-                    feat::class.simpleName?.toLowerSnakeCase() == featureName.toString()
-                } ?: return@forEach
-
-                // --- セーフティチェック: Enabled ---
-                val isEnabled = when (val rawEnabled = featureData["enabled"]) {
-                    is Boolean -> rawEnabled
-                    is String -> rawEnabled.toBoolean()
-                    is Number -> rawEnabled.toInt() != 0
-                    else -> null // 不明な場合はデフォルト（現状維持）にするため null
+                    val id = feat::class.simpleName?.toLowerSnakeCase()
+                    id == featureName.toString()
+                } ?: run {
+                    return@forEach
                 }
-
-                // 読み込みに成功した場合のみ適用、失敗（null）ならデフォルトのまま
+                // --- Enabled の適用 ---
+                val isEnabled = featureData["enabled"] as? Boolean
                 isEnabled?.let { if (it) feature.enable() else feature.disable() }
 
-                // --- セーフティチェック: Properties ---
+                // --- Properties の適用 ---
                 val props = featureData["properties"] as? Map<*, *> ?: return@forEach
                 props.forEach { (propName, value) ->
                     if (propName is String && value != null) {
-                        try {
-                            applyPropertySafely(feature, propName, value)
-                        } catch (e: Exception) {
-                            LogSystem.error("Failed to apply property $propName for $featureName: ${e.message}")
-                        }
+                        applyPropertySafely(feature, propName, value)
                     }
                 }
             }
@@ -225,7 +222,7 @@ object ConfigManager : MinecraftInterface() {
      * プロパティの型に合わせて値を安全にキャスト・変換して適用する
      */
     private fun applyPropertySafely(feature: Feature, propName: String, value: Any) {
-        val property = feature.properties[propName] ?: return
+        val property = feature.get<Property<*>>(propName) ?: return
         property.tryApply(value)
     }
 

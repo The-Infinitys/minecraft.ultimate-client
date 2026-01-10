@@ -24,9 +24,11 @@ class BooleanPropertyWidget(
     private val propertyToggleButton = PropertyToggleButton(x, y, height * 2, height, property)
     override fun children(): List<GuiEventListener> = listOf(propertyToggleButton)
     override fun relocate() {
+        super.relocate()
         propertyToggleButton.x = x + width - propertyToggleButton.width
         propertyToggleButton.y = y
     }
+
     override fun renderWidget(guiGraphics: GuiGraphics, i: Int, j: Int, f: Float) {
         super.renderWidget(guiGraphics, i, j, f)
         propertyToggleButton.render(guiGraphics, i, j, f)
