@@ -149,7 +149,8 @@ open class Feature : MinecraftInterface() {
      */
     fun tryApply(name: String, value: Any) {
         ensureAllPropertiesRegistered()
-        _properties[name]?.tryApply(value) ?: LogSystem.warn("Property '$name' not found in '${this.name}'")
+        val snakeName = name.toLowerSnakeCase()
+        _properties[snakeName]?.tryApply(value) ?: LogSystem.warn("Property '$snakeName' not found in '${this.name}'")
     }
 
     fun data(): FeatureData {

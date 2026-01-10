@@ -88,8 +88,9 @@ object ConfigManager : MinecraftInterface() {
     private fun save(file: File, data: Map<String, *>) {
         try {
             if (!file.parentFile.exists()) file.parentFile.mkdirs()
-            // deepConvert を廃止し、toJsonElement ロジックを持つシリアライザーに直接渡す
-            val jsonString = json.encodeToString(GenericMapSerializer, data)
+            @Suppress("UNCHECKED_CAST")
+            val plainMap = deepConvert(data) as Map<String, Any?>
+            val jsonString = json.encodeToString(GenericMapSerializer, plainMap)
             file.writeText(jsonString)
         } catch (e: Exception) {
             LogSystem.error("Failed to save config: ${e.message}")
