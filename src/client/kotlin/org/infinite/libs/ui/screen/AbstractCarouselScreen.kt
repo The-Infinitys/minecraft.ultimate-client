@@ -13,7 +13,11 @@ import org.infinite.libs.ui.widgets.AbstractCarouselWidget
 import org.lwjgl.glfw.GLFW
 import kotlin.math.*
 
-abstract class AbstractCarouselScreen<T>(title: Component) : Screen(title) {
+abstract class AbstractCarouselScreen<T>(title: Component, private val parent: Screen? = null) : Screen(title) {
+    override fun onClose() {
+        minecraft.screen = parent
+    }
+
     val currentWidget: AbstractCarouselWidget<T>
         get() = carouselWidgets[pageIndex]
     private var _pageIndex: Int = 0

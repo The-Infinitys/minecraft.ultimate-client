@@ -13,7 +13,8 @@
     "graphics.MinecraftMixin",
     "graphics.ScreenAccessor",
     "graphics.ScreenMixin",
-    "graphics.UiMixin"
+    "graphics.UiMixin",
+    "ui.OptionsScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
