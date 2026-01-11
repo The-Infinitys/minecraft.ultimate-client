@@ -11,6 +11,33 @@ import org.infinite.libs.ui.widgets.PropertyWidget
 class BooleanProperty(
     default: Boolean,
 ) : Property<Boolean>(default) {
+    override fun tryApply(anyValue: Any?) {
+        if (anyValue == null) return
+
+        val converted: Boolean? = when (anyValue) {
+            // 1. 直接的な Boolean
+            is Boolean -> anyValue
+
+            // 2. 数値型 (0ならfalse, それ以外はtrue)
+            is Number -> anyValue.toLong() != 0L
+
+            // 3. 文字列型 ("true" "on" "yes" なら true)
+            is String -> {
+                when (val s = anyValue.lowercase()) {
+                    "true", "on", "yes", "1" -> true
+                    "false", "off", "no", "0" -> false
+                    else -> s.toBooleanStrictOrNull() // Kotlin標準のパース
+                }
+            }
+
+            else -> null
+        }
+
+        if (converted != null) {
+            this.value = converted
+        }
+    }
+
     /**
      * 現在の値を反転させます。
      * 親クラスの setter を通るので、スレッド安全かつ通知も飛びます。

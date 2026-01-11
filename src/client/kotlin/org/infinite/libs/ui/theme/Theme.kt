@@ -10,12 +10,12 @@ abstract class Theme {
         y: Float,
         width: Float,
         height: Float,
-        graphics2DRenderer: Graphics2D,
+        graphics2D: Graphics2D,
         alpha: Float = 1.0f,
     ) {
         val backgroundColor = colorScheme.backgroundColor
-        graphics2DRenderer.fillStyle = backgroundColor.alpha((255 * alpha).toInt())
-        graphics2DRenderer.fillRect(x, y, width, height)
+        graphics2D.fillStyle = backgroundColor.alpha((255 * alpha).toInt())
+        graphics2D.fillRect(x, y, width, height)
     }
     fun renderBackGround(
         x: Int,

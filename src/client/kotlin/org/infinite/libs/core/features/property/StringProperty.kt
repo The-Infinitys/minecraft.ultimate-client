@@ -13,6 +13,10 @@ class StringProperty(
     default: String,
     val regex: Regex? = null,
 ) : Property<String>(default) {
+    override fun tryApply(anyValue: Any?) {
+        if (anyValue == null) return
+        this.value = anyValue.toString()
+    }
 
     override fun filterValue(newValue: String): String {
         // 正規表現にマッチしない場合は、変更を拒否して現在の値を返す

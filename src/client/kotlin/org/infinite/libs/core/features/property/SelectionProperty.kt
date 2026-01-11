@@ -12,6 +12,33 @@ open class SelectionProperty<T : Any>(
     default: T,
     opts: List<T>,
 ) : Property<T>(default) {
+    override fun tryApply(anyValue: Any?) {
+        if (anyValue == null) return
+
+        val foundValue: T? = when (anyValue) {
+            // 2. 文字列からの逆引き（ここが重要）
+            is String -> {
+                options.find {
+                    // propertyString (表示名) もしくは toString (内部名) が一致するか確認
+                    propertyString(it).equals(anyValue, ignoreCase = true) ||
+                        it.toString().equals(anyValue, ignoreCase = true)
+                }
+            }
+
+            // 3. インデックス（数値）指定
+            is Number -> {
+                val idx = anyValue.toInt()
+                if (idx in options.indices) options[idx] else null
+            }
+
+            else -> null
+        }
+
+        if (foundValue != null) {
+            this.value = foundValue
+        }
+    }
+
     open val options: List<T> = opts
     override fun filterValue(newValue: T): T {
         // 選択肢にない場合は現在の値を維持（変更を拒否）

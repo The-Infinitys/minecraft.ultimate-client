@@ -14,12 +14,38 @@ open class EnumSelectionProperty<T : Enum<T>>(
     default = default,
     opts = default.declaringJavaClass.enumConstants.toList(),
 ) {
-    companion object {
-        /**
-         * 型引数から自動的に全要素を取得して生成するファクトリメソッド
-         */
-        inline fun <reified T : Enum<T>> create(default: T): EnumSelectionProperty<T> {
-            return EnumSelectionProperty(default)
+    // Enumのクラス型を保持しておく（逆引き用）
+    private val enumClass: Class<T> = default.declaringJavaClass
+
+    override fun tryApply(anyValue: Any?) {
+        if (anyValue == null) return
+
+        // 1. すでに同じEnum型の場合
+        if (enumClass.isInstance(anyValue)) {
+            @Suppress("UNCHECKED_CAST")
+            this.value = anyValue as T
+            return
+        }
+
+        // 2. 文字列から逆引き (ConfigManager経由はここを通る)
+        if (anyValue is String) {
+            // name() との一致を確認
+            val found = options.find { it.name.equals(anyValue, ignoreCase = true) }
+                // もし見つからなければ、propertyString (表示名) との一致を確認
+                ?: options.find { propertyString(it).equals(anyValue, ignoreCase = true) }
+
+            if (found != null) {
+                this.value = found
+                return
+            }
+        }
+
+        // 3. 数値（ordinal）からの逆引き
+        if (anyValue is Number) {
+            val ordinal = anyValue.toInt()
+            if (ordinal in options.indices) {
+                this.value = options[ordinal]
+            }
         }
     }
 }

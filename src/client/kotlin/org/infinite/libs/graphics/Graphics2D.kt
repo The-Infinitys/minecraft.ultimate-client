@@ -276,6 +276,7 @@ open class Graphics2D(
         commandQueue.add(RenderCommand2D.DisableScissor)
     }
 
+    fun item(stack: ItemStack, x: Int, y: Int, size: Float = 16f) = item(stack, x.toFloat(), y.toFloat(), size)
     fun item(stack: ItemStack, x: Float, y: Float, size: Float = 16f) {
         textureOperations.drawItem(stack, x, y, size)
     }

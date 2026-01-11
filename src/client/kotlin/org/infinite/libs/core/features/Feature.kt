@@ -3,6 +3,7 @@ package org.infinite.libs.core.features
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.infinite.InfiniteClient
+import org.infinite.libs.core.features.property.BooleanProperty
 import org.infinite.libs.interfaces.MinecraftInterface
 import org.infinite.libs.log.LogSystem
 import org.infinite.utils.toLowerSnakeCase
@@ -40,7 +41,7 @@ open class Feature : MinecraftInterface() {
         }
     }
 
-    val enabled = Property(false)
+    val enabled = BooleanProperty(false)
     open val name: String = this::class.simpleName ?: "UnknownFeature"
     open val featureType: FeatureType = FeatureType.Utils
 

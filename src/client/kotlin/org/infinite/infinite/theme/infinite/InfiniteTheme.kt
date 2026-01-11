@@ -19,7 +19,7 @@ class InfiniteTheme : Theme() {
         y: Float,
         width: Float,
         height: Float,
-        graphics2DRenderer: Graphics2D,
+        graphics2D: Graphics2D,
         alpha: Float,
     ) {
         val centerX = x + width / 2f
@@ -44,7 +44,7 @@ class InfiniteTheme : Theme() {
         val r = sqrt(width.pow(2) + height.pow(2)) * (1 + 4 * alpha)
         val size = baseColors.size
 
-        graphics2DRenderer.enableScissor(x.toInt(), y.toInt(), width.toInt(), height.toInt())
+        graphics2D.enableScissor(x.toInt(), y.toInt(), width.toInt(), height.toInt())
 
 // ... 前後の処理は同じ ...
 
@@ -72,11 +72,11 @@ class InfiniteTheme : Theme() {
              * 多くのライブラリでは 1(x1,y1) -> 2(x2,y2) -> 3(x3,y3) -> 4(centerX,centerY)
              * のように反時計回りまたは時計回りに指定します。
              */
-            graphics2DRenderer.fillQuad(
+            graphics2D.fillQuad(
                 x1, y1, x2, y2, x3, y3, centerX, centerY,
                 color1, color2, color3, centerColor,
             )
         }
-        graphics2DRenderer.disableScissor()
+        graphics2D.disableScissor()
     }
 }

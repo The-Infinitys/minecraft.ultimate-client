@@ -24,7 +24,6 @@ class ScrollableLayoutContainer(
             widget.render(guiGraphics, i, j, f)
         }
     }
-
     private var focused = false
     override fun getRectangle(): ScreenRectangle {
         return ScreenRectangle(x, y, width, height)

@@ -23,7 +23,7 @@ open class ColorScheme {
 
     // 選択状態を示すアクセントカラー（例: 青ベース）
     open val accentColor: Int
-        get() = blueColor // または color(210f, 0.8f, 0.6f, 1f)
+        get() = cyanColor
 
     // 非活性（Disabled）なテキスト
     open val secondaryColor: Int
