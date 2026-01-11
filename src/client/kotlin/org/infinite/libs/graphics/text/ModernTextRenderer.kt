@@ -19,13 +19,13 @@ import java.util.function.Consumer
 class ModernTextRenderer(
     private val graphics: GuiGraphics,
     private val hoveredTextEffects: GuiGraphics.HoveredTextEffects,
+    alpha: Float = 1.0f, // 透過度を追加（デフォルト1.0）
     private val additionalConsumer: Consumer<Style>? = null,
 ) : ActiveTextCollector, Consumer<Style> {
+    private var params: ActiveTextCollector.Parameters = createDefaultTextParameters(alpha)
     private fun createDefaultTextParameters(f: Float): ActiveTextCollector.Parameters {
         return ActiveTextCollector.Parameters(Matrix3x2f(graphics.pose()), f, graphics.scissorStack.peek())
     }
-
-    private var params: ActiveTextCollector.Parameters = createDefaultTextParameters(1.0f)
 
     private val minecraft: Minecraft = Minecraft.getInstance()
 

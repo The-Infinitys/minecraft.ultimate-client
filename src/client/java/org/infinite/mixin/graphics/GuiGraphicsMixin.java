@@ -32,13 +32,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(GuiGraphics.class)
 public class GuiGraphicsMixin {
   @Shadow @Final Minecraft minecraft;
-
   @Shadow @Final public GuiRenderState guiRenderState;
-
   @Shadow @Final public GuiGraphics.ScissorStack scissorStack;
-
   @Shadow @Final private Matrix3x2fStack pose;
 
+  // 1. 標準の textRenderer: 常に不透明 (1.0F)
   @Inject(
       method =
           "textRenderer(Lnet/minecraft/client/gui/GuiGraphics$HoveredTextEffects;Ljava/util/function/Consumer;)Lnet/minecraft/client/gui/ActiveTextCollector;",
@@ -48,34 +46,30 @@ public class GuiGraphicsMixin {
       GuiGraphics.HoveredTextEffects hoveredTextEffects,
       @Nullable Consumer<Style> consumer,
       CallbackInfoReturnable<ActiveTextCollector> cir) {
+
     cir.setReturnValue(
-        new ModernTextRenderer((GuiGraphics) (Object) this, hoveredTextEffects, consumer));
+        new ModernTextRenderer((GuiGraphics) (Object) this, hoveredTextEffects, 1.0F, consumer));
   }
 
-  @Inject(method = "textRendererForWidget", at = @At("HEAD"), cancellable = true)
+  // 2. ウィジェット用: ウィジェットの透過度を取得して渡す
+  @Inject(
+      method =
+          "textRendererForWidget(Lnet/minecraft/client/gui/components/AbstractWidget;Lnet/minecraft/client/gui/GuiGraphics$HoveredTextEffects;)Lnet/minecraft/client/gui/ActiveTextCollector;",
+      at = @At("HEAD"),
+      cancellable = true)
   public void onTextRendererForWidget(
       AbstractWidget abstractWidget,
       GuiGraphics.HoveredTextEffects hoveredTextEffects,
       CallbackInfoReturnable<ActiveTextCollector> cir) {
+
+    // ここでウィジェットの alpha を抽出
+    float alpha = abstractWidget.getAlpha();
+
     cir.setReturnValue(
-        new ModernTextRenderer((GuiGraphics) (Object) this, hoveredTextEffects, null));
+        new ModernTextRenderer((GuiGraphics) (Object) this, hoveredTextEffects, alpha, null));
   }
 
-  // ヘルパーメソッド: FormattedCharSequence から最初の Style を抽出する
-  @Unique
-  private Style extractStyle(FormattedCharSequence sequence) {
-    StyleExtractor extractor = new StyleExtractor();
-    sequence.accept(extractor);
-    return extractor.getFoundStyle();
-  }
-
-  @Unique
-  private FormattedCharSequence stripBold(FormattedCharSequence original) {
-    return (sink) ->
-        original.accept(
-            (index, style, codePoint) -> sink.accept(index, style.withBold(false), codePoint));
-  }
-
+  // 3. 直接描画用 (以前のロジックを維持)
   @Inject(
       method =
           "drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;IIIZ)V",
@@ -89,9 +83,8 @@ public class GuiGraphicsMixin {
       int k,
       boolean bl,
       CallbackInfo ci) {
-    if (ARGB.alpha(k) == 0) {
-      return;
-    }
+    if (ARGB.alpha(k) == 0) return;
+
     if (InfiniteClient.INSTANCE
         .getGlobalFeatures()
         .getRendering()
@@ -102,7 +95,9 @@ public class GuiGraphicsMixin {
       Style originalStyle = extractStyle(formattedCharSequence);
       FontSet fontSet = fontManager.infinite$fontSetFromStyle(originalStyle);
       Font modernFont = FontFromFontSetKt.fromFontSet(fontSet);
+
       FormattedCharSequence noBoldSequence = stripBold(formattedCharSequence);
+
       this.guiRenderState.submitText(
           new GuiTextRenderState(
               modernFont,
@@ -117,5 +112,19 @@ public class GuiGraphicsMixin {
               this.scissorStack.peek()));
       ci.cancel();
     }
+  }
+
+  @Unique
+  private Style extractStyle(FormattedCharSequence sequence) {
+    StyleExtractor extractor = new StyleExtractor();
+    sequence.accept(extractor);
+    return extractor.getFoundStyle();
+  }
+
+  @Unique
+  private FormattedCharSequence stripBold(FormattedCharSequence original) {
+    return (sink) ->
+        original.accept(
+            (index, style, codePoint) -> sink.accept(index, style.withBold(false), codePoint));
   }
 }
