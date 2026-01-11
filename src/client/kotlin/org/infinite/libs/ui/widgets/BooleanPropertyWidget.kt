@@ -24,10 +24,10 @@ class BooleanPropertyWidget(
     override fun children(): List<GuiEventListener> = listOf(propertyToggleButton)
     override fun relocate() {
         super.relocate()
-        propertyToggleButton.x = x + width - propertyToggleButton.width
-        propertyToggleButton.y = y
         propertyToggleButton.width = height * 2
         propertyToggleButton.height = height
+        propertyToggleButton.x = x + width - height * 2
+        propertyToggleButton.y = y
     }
 
     override fun renderWidget(guiGraphics: GuiGraphics, i: Int, j: Int, f: Float) {

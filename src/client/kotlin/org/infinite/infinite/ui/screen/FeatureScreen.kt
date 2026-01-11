@@ -1,8 +1,10 @@
 package org.infinite.infinite.ui.screen
 
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.layouts.LinearLayout
 import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.Feature
@@ -24,10 +26,10 @@ class FeatureScreen<T : Feature>(
         val innerWidth = width - (margin * 2)
 
         // 内部レイアウトの構築
-        val innerLayout = LinearLayout.vertical().spacing(8)
+        val innerLayout = LinearLayout.vertical().spacing(margin)
 
         feature.properties.forEach { (_, property) ->
-            val propertyWidget = property.widget(0, 0, innerWidth)
+            val propertyWidget = property.widget(0, 0, innerWidth - margin * 2)
             innerLayout.addChild(propertyWidget)
         }
         innerLayout.arrangeElements()
@@ -60,6 +62,28 @@ class FeatureScreen<T : Feature>(
         g2d.flush()
         container.render(guiGraphics, mouseX, mouseY, delta)
     }
+
+    override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
+        return container.mouseClicked(mouseButtonEvent, bl)
+    }
+
+    override fun mouseDragged(mouseButtonEvent: MouseButtonEvent, d: Double, e: Double): Boolean {
+        return container.mouseDragged(mouseButtonEvent, d, e)
+    }
+
+    override fun mouseMoved(d: Double, e: Double) {
+        container.mouseMoved(d, e)
+    }
+
+    override fun mouseReleased(mouseButtonEvent: MouseButtonEvent): Boolean {
+        return container.mouseReleased(mouseButtonEvent)
+    }
+
+    override fun mouseScrolled(d: Double, e: Double, f: Double, g: Double): Boolean {
+        return container.mouseScrolled(d, e, f, g)
+    }
+
+    override fun children(): List<GuiEventListener> = listOf(container)
 
     override fun onClose() {
         minecraft.setScreen(parent)

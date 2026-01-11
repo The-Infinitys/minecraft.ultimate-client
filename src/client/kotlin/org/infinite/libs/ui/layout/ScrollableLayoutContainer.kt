@@ -35,27 +35,24 @@ class ScrollableLayoutContainer(
     }
 
     override fun mouseScrolled(d: Double, e: Double, f: Double, g: Double): Boolean {
-        // 自身のスクロール処理を優先（superはスクロールバーの制御を行う）
-        if (super.mouseScrolled(d, e, f, g)) return true
-
         var result = false
         visitWidgets { widget ->
             if (!result && widget.mouseScrolled(d, e, f, g)) {
                 result = true
             }
         }
+        if (super.mouseScrolled(d, e, f, g)) return true
         return result
     }
 
     override fun mouseReleased(mouseButtonEvent: MouseButtonEvent): Boolean {
-        if (super.mouseReleased(mouseButtonEvent)) return true
-
         var result = false
         visitWidgets { widget ->
             if (!result && widget.mouseReleased(mouseButtonEvent)) {
                 result = true
             }
         }
+        if (super.mouseReleased(mouseButtonEvent)) return true
         return result
     }
 
@@ -67,29 +64,25 @@ class ScrollableLayoutContainer(
     }
 
     override fun mouseDragged(mouseButtonEvent: MouseButtonEvent, d: Double, e: Double): Boolean {
-        if (super.mouseDragged(mouseButtonEvent, d, e)) return true
-
         var result = false
         visitWidgets { widget ->
             if (!result && widget.mouseDragged(mouseButtonEvent, d, e)) {
                 result = true
             }
         }
+        if (super.mouseDragged(mouseButtonEvent, d, e)) return true
         return result
     }
 
     override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
-        if (super.mouseClicked(mouseButtonEvent, bl)) return true
-
         var result = false
         visitWidgets { widget ->
-            // クリック範囲内にある子要素にのみ伝播
-            if (!result && widget.isMouseOver(mouseButtonEvent.x, mouseButtonEvent.y)) {
-                if (widget.mouseClicked(mouseButtonEvent, bl)) {
-                    result = true
-                }
+            if (!result && widget.mouseClicked(mouseButtonEvent, bl)
+            ) {
+                result = true
             }
         }
+        if (super.mouseClicked(mouseButtonEvent, bl)) return true
         return result
     }
 
@@ -104,14 +97,13 @@ class ScrollableLayoutContainer(
     }
 
     override fun keyPressed(keyEvent: KeyEvent): Boolean {
-        if (super.keyPressed(keyEvent)) return true
-
         var result = false
         visitWidgets { widget ->
             if (!result && widget.keyPressed(keyEvent)) {
                 result = true
             }
         }
+        if (super.keyPressed(keyEvent)) return true
         return result
     }
 
@@ -122,6 +114,7 @@ class ScrollableLayoutContainer(
                 result = true
             }
         }
+        if (super.keyReleased(keyEvent)) return true
         return result
     }
 

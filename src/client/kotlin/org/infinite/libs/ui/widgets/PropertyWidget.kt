@@ -5,8 +5,6 @@ import net.minecraft.client.gui.components.AbstractContainerWidget
 import net.minecraft.client.gui.components.Renderable
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.narration.NarrationElementOutput
-import net.minecraft.client.input.CharacterEvent
-import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.Property
@@ -67,30 +65,6 @@ open class PropertyWidget<T : Property<*>>(
     }
 
     protected open fun relocate() {}
-    override fun mouseScrolled(d: Double, e: Double, f: Double, g: Double): Boolean {
-        children().forEach { it.mouseScrolled(d, e, f, g) }
-        return super.mouseScrolled(d, e, f, g)
-    }
-
-    override fun mouseMoved(d: Double, e: Double) {
-        children().forEach { it.mouseMoved(d, e) }
-        super.mouseMoved(d, e)
-    }
-
-    override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
-        children().forEach { it.mouseClicked(mouseButtonEvent, bl) }
-        return super.mouseClicked(mouseButtonEvent, bl)
-    }
-
-    override fun mouseDragged(mouseButtonEvent: MouseButtonEvent, d: Double, e: Double): Boolean {
-        children().forEach { it.mouseDragged(mouseButtonEvent, d, e) }
-        return super.mouseDragged(mouseButtonEvent, d, e)
-    }
-
-    override fun charTyped(characterEvent: CharacterEvent): Boolean {
-        children().forEach { it.charTyped(characterEvent) }
-        return super.charTyped(characterEvent)
-    }
 
     override fun renderWidget(
         guiGraphics: GuiGraphics,
