@@ -104,49 +104,52 @@ class ListPropertyWidget<T : Any>(
     }
 
     override fun renderWidget(guiGraphics: GuiGraphics, i: Int, j: Int, f: Float) {
-        // 背景とタイトルの描画
+        // 1. 背景とタイトルの描画 (PropertyWidget の基本描画)
         super.renderWidget(guiGraphics, i, j, f)
 
         val g2d = Graphics2DRenderer(guiGraphics)
         val theme = InfiniteClient.theme
 
+        // --- リストコンテンツの描画 (Scissor 内) ---
         g2d.enableScissor(x, (y + headerHeight).toInt(), width, (height - headerHeight).toInt())
 
         var currentY = y + headerHeight - scrollAmount.toFloat()
 
         property.value.forEachIndexed { index, item ->
+            // 現在の行の Y 座標を計算 (入力ウィジェットの追従用)
+            val itemY = y + headerHeight - scrollAmount.toFloat() + (index * itemHeight)
+
             if (index == editingIndex) {
-                activeInputWidget?.apply {
-                    this.y = currentY.toInt() + 1
-                    this.render(guiGraphics, i, j, f)
-                }
+                // 編集中は、この行にウィジェットを配置するが、描画は Scissor の外で最後に行う
+                activeInputWidget?.y = itemY.toInt() + 1
             } else {
-                // ホバー判定
+                // 通常の要素描画
                 val isHover =
-                    i >= x && i <= x + width - 10 && j >= currentY && j <= currentY + itemHeight && j >= y + headerHeight
+                    i >= x && i <= x + width - 10 && j >= itemY && j <= itemY + itemHeight && j >= y + headerHeight
                 if (isHover) {
                     g2d.fillStyle = theme.colorScheme.secondaryColor.mix(theme.colorScheme.backgroundColor, 0.4f)
-                    g2d.fillRect(x.toFloat(), currentY, width.toFloat() - 6f, itemHeight)
+                    g2d.fillRect(x.toFloat(), itemY, width.toFloat() - 6f, itemHeight)
                 }
-                property.renderElement(g2d, item, x + 4, currentY.toInt() + 2, width - 35, itemHeight.toInt() - 4)
-                renderRemoveButton(g2d, currentY, i, j)
+                property.renderElement(g2d, item, x + 4, itemY.toInt() + 2, width - 35, itemHeight.toInt() - 4)
+                renderRemoveButton(g2d, itemY, i, j)
             }
             currentY += itemHeight
         }
 
-        // 追加ボタン
+        // 追加ボタン (編集中でない、または既存アイテムの編集中のみ表示)
         if (editingIndex != -1 || activeInputWidget == null) {
             renderAddButton(g2d, currentY, i, j)
         } else {
-            activeInputWidget?.apply {
-                this.y = currentY.toInt() + 1
-                this.render(guiGraphics, i, j, f)
-            }
+            // 新規追加ボタンの入力中
+            activeInputWidget?.y = currentY.toInt() + 1
         }
-        g2d.disableScissor()
-        g2d.flush()
 
+        g2d.disableScissor()
         renderScrollbar(g2d)
+
+        // 3. アクティブな入力ウィジェットを最前面に描画 (Scissor 外)
+        g2d.flush()
+        activeInputWidget?.render(guiGraphics, i, j, f)
     }
 
     private fun renderScrollbar(g2d: Graphics2DRenderer) {
