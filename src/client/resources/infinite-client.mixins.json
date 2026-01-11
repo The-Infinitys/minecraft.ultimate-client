@@ -14,6 +14,11 @@
     "graphics.ScreenAccessor",
     "graphics.ScreenMixin",
     "graphics.UiMixin",
+    "graphics.widgets.ButtonBackgroundMixin",
+    "graphics.widgets.EditBoxMixin",
+    "graphics.widgets.ScrollWidgetMixin",
+    "graphics.widgets.SliderButtonMixin",
+    "graphics.widgets.button.PlainButtonMixin",
     "ui.OptionsScreenMixin"
   ],
   "injectors": {

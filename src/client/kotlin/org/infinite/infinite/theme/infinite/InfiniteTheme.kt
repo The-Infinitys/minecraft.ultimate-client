@@ -13,7 +13,6 @@ import kotlin.math.sqrt
 class InfiniteTheme : Theme() {
     override val colorScheme: ColorScheme = InfiniteColorScheme()
     private val loopTime = 5000.0 // 5秒で一周
-
     override fun renderBackGround(
         x: Float,
         y: Float,

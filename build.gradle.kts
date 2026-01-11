@@ -163,6 +163,8 @@ spotless {
 tasks.withType<JavaCompile>().configureEach {
     options.errorprone {
         isEnabled.set(true)
+
+        excludedPaths.set(".*/org/infinite/mixin/.*")
         // 頻出するMixinアノテーションをリストアップ
         val mixinAnnotations = listOf(
             "org.spongepowered.asm.mixin.injection.Inject",

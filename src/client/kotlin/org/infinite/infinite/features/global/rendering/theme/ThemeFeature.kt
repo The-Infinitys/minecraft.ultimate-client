@@ -5,6 +5,7 @@ import org.infinite.libs.core.features.feature.GlobalFeature
 import org.infinite.libs.core.features.property.SelectionProperty
 
 class ThemeFeature : GlobalFeature() {
+
     /**
      * ThemeManager から動的に選択肢を取得する専用プロパティ
      */
