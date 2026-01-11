@@ -19,6 +19,7 @@
     "infinite.features.global.rendering.theme.ScrollWidgetMixin",
     "infinite.features.global.rendering.theme.SliderButtonMixin",
     "infinite.features.global.rendering.theme.button.PlainButtonMixin",
+    "infinite.features.local.combat.attack.CriticalFeatureMixin",
     "ui.OptionsScreenMixin"
   ],
   "injectors": {

@@ -10,6 +10,8 @@
     "infinite.features.global.rendering": "Global Rendering Features",
     "infinite.features.global.rendering.infinite_font_feature": "Infinite Font Feature",
     "infinite.features.global.rendering.theme_feature": "Theme Feature",
+    "infinite.features.local.combat.critical_feature": "攻撃時に自動的にクリティカル判定を発生させます。モードによって検知リスクと挙動が異なります。",
+    "infinite.features.local.combat.critical_feature.mode": "判定モード",
     "infinite.features.local.movement.quick_move.acceleration_constant": "加速定数",
     "infinite.features.local.movement.quick_move.acceleration_multiplier": "加速倍率",
     "infinite.features.local.movement.quick_move.allow_in_air": "空中での使用を許可",
