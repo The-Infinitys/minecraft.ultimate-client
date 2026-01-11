@@ -8,9 +8,14 @@ class BooleanPropertyWidget(
     x: Int,
     y: Int,
     width: Int,
-    height: Int = DEFAULT_WIDGET_HEIGHT,
     property: BooleanProperty,
-) : PropertyWidget<BooleanProperty>(x, y, width, height, property) {
+) : PropertyWidget<BooleanProperty>(
+    x,
+    y,
+    width,
+    DEFAULT_WIDGET_HEIGHT * 2,
+    property,
+) {
     private class PropertyToggleButton(x: Int, y: Int, width: Int, height: Int, private val property: BooleanProperty) :
         ToggleButton(x, y, width, height) {
         override var value: Boolean
@@ -20,14 +25,19 @@ class BooleanPropertyWidget(
             }
     }
 
-    private val propertyToggleButton = PropertyToggleButton(x, y, height * 2, height, property)
+    private val propertyToggleButton = PropertyToggleButton(x, y, height * 2, DEFAULT_WIDGET_HEIGHT, property)
     override fun children(): List<GuiEventListener> = listOf(propertyToggleButton)
     override fun relocate() {
         super.relocate()
-        propertyToggleButton.width = height * 2
-        propertyToggleButton.height = height
-        propertyToggleButton.x = x + width - height * 2
-        propertyToggleButton.y = y
+        val twoLineLimit = 256
+        propertyToggleButton.width = propertyToggleButton.height * 2
+        propertyToggleButton.x = x + width - propertyToggleButton.height * 2
+        propertyToggleButton.y =
+            if (width > twoLineLimit) {
+                y
+            } else {
+                y + height - propertyToggleButton.height
+            }
     }
 
     override fun renderWidget(guiGraphics: GuiGraphics, i: Int, j: Int, f: Float) {

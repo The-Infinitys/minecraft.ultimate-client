@@ -20,8 +20,8 @@ open class NumberProperty<T>(
         }
     }
 
-    fun display(): String = "${value}$suffix"
+    open fun display(): String = "${value}$suffix"
     override fun widget(x: Int, y: Int, width: Int): PropertyWidget<NumberProperty<T>> {
-        return NumberPropertyWidget<T>(x, y, width, property = this)
+        return NumberPropertyWidget<T>(x, y, width, this)
     }
 }

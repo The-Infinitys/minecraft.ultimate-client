@@ -4,12 +4,15 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.layouts.LinearLayout
 import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.input.CharacterEvent
+import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.network.chat.Component
 import org.infinite.InfiniteClient
 import org.infinite.libs.core.features.Feature
 import org.infinite.libs.graphics.bundle.Graphics2DRenderer
 import org.infinite.libs.ui.layout.ScrollableLayoutContainer
+import org.lwjgl.glfw.GLFW
 
 class FeatureScreen<T : Feature>(
     private val feature: T,
@@ -81,6 +84,18 @@ class FeatureScreen<T : Feature>(
 
     override fun mouseScrolled(d: Double, e: Double, f: Double, g: Double): Boolean {
         return container.mouseScrolled(d, e, f, g)
+    }
+
+    override fun keyPressed(keyEvent: KeyEvent): Boolean {
+        if (keyEvent.key == GLFW.GLFW_KEY_ESCAPE) {
+            minecraft.setScreen(parent)
+            return true
+        }
+        return container.keyPressed(keyEvent)
+    }
+
+    override fun charTyped(characterEvent: CharacterEvent): Boolean {
+        return container.charTyped(characterEvent)
     }
 
     override fun children(): List<GuiEventListener> = listOf(container)

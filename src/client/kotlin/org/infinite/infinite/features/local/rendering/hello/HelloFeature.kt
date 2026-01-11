@@ -2,6 +2,7 @@ package org.infinite.infinite.features.local.rendering.hello
 
 import org.infinite.libs.core.features.feature.LocalFeature
 import org.infinite.libs.core.features.property.BooleanProperty
+import org.infinite.libs.core.features.property.StringProperty
 import org.infinite.libs.core.features.property.number.DoubleProperty
 import org.infinite.libs.core.features.property.number.FloatProperty
 import org.infinite.libs.core.features.property.number.IntProperty
@@ -32,6 +33,9 @@ class HelloFeature : LocalFeature() {
 
     @Suppress("Unused")
     val doubleProperty by property(DoubleProperty(5.0, 5.0, 10.0, "d"))
+
+    @Suppress("Unused")
+    val stringProperty by property(StringProperty("Hello World"))
 
     init {
         enable()

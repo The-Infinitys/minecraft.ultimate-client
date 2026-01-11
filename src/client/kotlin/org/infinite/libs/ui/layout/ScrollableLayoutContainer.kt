@@ -77,8 +77,7 @@ class ScrollableLayoutContainer(
     override fun mouseClicked(mouseButtonEvent: MouseButtonEvent, bl: Boolean): Boolean {
         var result = false
         visitWidgets { widget ->
-            if (!result && widget.mouseClicked(mouseButtonEvent, bl)
-            ) {
+            if (!result && widget.mouseClicked(mouseButtonEvent, bl)) {
                 result = true
             }
         }

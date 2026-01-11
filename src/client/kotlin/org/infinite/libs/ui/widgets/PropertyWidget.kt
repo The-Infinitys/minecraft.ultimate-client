@@ -77,14 +77,17 @@ open class PropertyWidget<T : Property<*>>(
         val name = property.name
         val translationKey = property.translationKey() ?: "unknown"
         val description = Component.translatable(translationKey).string
-        g2d.textStyle.size = 10f
+        val nameSize = 10f
+        val descriptionSize = 8f
+        val padding = 2f
+        g2d.textStyle.size = nameSize
         g2d.textStyle.shadow = false
         g2d.textStyle.font = "infinite_regular"
         g2d.fillStyle = colorScheme.foregroundColor
         g2d.text(name, x, y)
-        g2d.textStyle.size = 8f
+        g2d.textStyle.size = descriptionSize
         g2d.fillStyle = colorScheme.secondaryColor
-        g2d.text(description, x.toFloat(), y + height - g2d.textStyle.size)
+        g2d.text(description, x.toFloat(), y + nameSize + padding)
         g2d.flush()
     }
 

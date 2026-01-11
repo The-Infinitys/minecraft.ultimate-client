@@ -1,6 +1,8 @@
 package org.infinite.libs.core.features.property
 
 import org.infinite.libs.core.features.Property
+import org.infinite.libs.ui.widgets.PropertyWidget
+import org.infinite.libs.ui.widgets.StringPropertyWidget
 
 /**
  * 自由な文字列入力を管理するプロパティ
@@ -19,5 +21,9 @@ class StringProperty(
         } else {
             value
         }
+    }
+
+    override fun widget(x: Int, y: Int, width: Int): PropertyWidget<out Property<String>> {
+        return StringPropertyWidget(x, y, width, this)
     }
 }

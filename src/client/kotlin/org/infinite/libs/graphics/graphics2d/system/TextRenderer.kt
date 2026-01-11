@@ -62,4 +62,20 @@ class TextRenderer(private val guiGraphics: GuiGraphics) : MinecraftInterface() 
         val width = font.width(text) * scale
         text(fontStr, text, x - width / 2, y - size / 2, color, size, shadow)
     }
+
+    fun textRight(
+        font: String,
+        text: String,
+        x: Float,
+        y: Float,
+        color: Int,
+        size: Float = 8.0f,
+        shadow: Boolean = false,
+    ) {
+        val fontStr = font
+        val font = font(fontStr)
+        val scale = size / minecraft.font.lineHeight
+        val width = font.width(text) * scale
+        text(fontStr, text, x - width, y, color, size, shadow)
+    }
 }

@@ -7,4 +7,6 @@ class FloatProperty(
     min: Float,
     max: Float,
     suffix: String = "",
-) : NumberProperty<Float>(default, min, max, suffix)
+) : NumberProperty<Float>(default, min, max, suffix) {
+    override fun display(): String = "${"%.1f".format(value)}$suffix"
+}

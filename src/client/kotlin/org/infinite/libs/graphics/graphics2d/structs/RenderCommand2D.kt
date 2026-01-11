@@ -66,6 +66,16 @@ sealed interface RenderCommand2D {
         val size: Float,
     ) : RenderCommand2D
 
+    data class TextRight(
+        val font: String,
+        val text: String,
+        val x: Float,
+        val y: Float,
+        val color: Int,
+        val shadow: Boolean,
+        val size: Float,
+    ) : RenderCommand2D
+
     object PushTransform : RenderCommand2D
     object PopTransform : RenderCommand2D
 

@@ -20,6 +20,6 @@ class BooleanProperty(
     }
 
     override fun widget(x: Int, y: Int, width: Int): PropertyWidget<BooleanProperty> {
-        return BooleanPropertyWidget(x, y, width, property = this)
+        return BooleanPropertyWidget(x, y, width, this)
     }
 }

@@ -252,6 +252,14 @@ open class Graphics2D(
         commandQueue.add(RenderCommand2D.Text(font, text, x, y, fillStyle, shadow, size))
     }
 
+    fun textRight(text: String, x: Int, y: Int) = textRight(text, x.toFloat(), y.toFloat())
+    fun textRight(text: String, x: Float, y: Float) {
+        val shadow = textStyle.shadow
+        val size = textStyle.size
+        val font = textStyle.font
+        commandQueue.add(RenderCommand2D.TextRight(font, text, x, y, fillStyle, shadow, size))
+    }
+
     fun textCentered(text: String, x: Float, y: Float) {
         val shadow = textStyle.shadow
         val size = textStyle.size

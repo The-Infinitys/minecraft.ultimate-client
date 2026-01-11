@@ -8,4 +8,6 @@ class DoubleProperty(
     min: Double,
     max: Double,
     suffix: String = "",
-) : NumberProperty<Double>(default, min, max, suffix)
+) : NumberProperty<Double>(default, min, max, suffix) {
+    override fun display(): String = "${"%.2f".format(value)}$suffix"
+}
