@@ -1,5 +1,6 @@
 package org.infinite.libs.core.features.property
 
+import net.minecraft.client.gui.GuiGraphics
 import org.infinite.libs.core.features.Property
 import org.infinite.libs.ui.widgets.ListPropertyWidget
 import org.infinite.libs.ui.widgets.PropertyWidget
@@ -23,7 +24,16 @@ abstract class ListProperty<T : Any>(
         onComplete: (T?) -> Unit,
     ): net.minecraft.client.gui.components.AbstractWidget
 
-    open fun elementToString(element: T): String = element.toString()
+    /**
+     * リスト内の1つの要素を描画する
+     * @param guiGraphics 描画用グラフィックス
+     * @param item 対象の要素
+     * @param x 描画開始X座標
+     * @param y 描画開始Y座標
+     * @param width 割り当てられた幅
+     * @param height 割り当てられた高さ
+     */
+    abstract fun renderElement(guiGraphics: GuiGraphics, item: T, x: Int, y: Int, width: Int, height: Int)
 
     fun add(element: T) {
         internalList.add(element)

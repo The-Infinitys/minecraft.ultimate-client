@@ -93,60 +93,81 @@ class ListPropertyWidget<T : Any>(
         val font = Minecraft.getInstance().font
 
         var currentY = y + DEFAULT_WIDGET_HEIGHT
-        val itemHeight = 20
+        val itemHeight = 22 // 少し高さを広げて余裕を持たせる
 
-        // 枠内背景（リスト領域を視覚化）
+        // リスト背景
         guiGraphics.fill(
             x,
             y + DEFAULT_WIDGET_HEIGHT,
             x + width,
             y + height,
-            colorScheme.backgroundColor.mix(colorScheme.secondaryColor, 0.1f),
+            colorScheme.backgroundColor.mix(colorScheme.secondaryColor, 0.05f),
         )
 
         property.value.forEachIndexed { index, item ->
             if (index == editingIndex) {
-                activeInputWidget?.y = currentY // 位置を同期
+                activeInputWidget?.y = currentY
                 currentY += itemHeight
                 return@forEachIndexed
             }
 
             val isHover = i >= x && i <= x + width && j >= currentY && j <= currentY + itemHeight
+
+            // アイテム全体の背景
             if (isHover) {
                 guiGraphics.fill(
                     x,
                     currentY,
                     x + width,
-                    (currentY + itemHeight),
-                    colorScheme.secondaryColor,
+                    currentY + itemHeight,
+                    colorScheme.secondaryColor.mix(colorScheme.backgroundColor, 0.5f),
                 )
             }
 
+            // --- プロパティ側で定義されたカスタム描画（アイコン等）の呼び出し ---
+            // 左側に 20px 程度のアイコンスペースを想定してオフセットを渡す
+            property.renderElement(guiGraphics, item, x + 4, currentY + 2, width - 30, itemHeight - 4)
+
+            // --- 改善された削除（×）ボタン ---
+            val deleteBtnSize = 16
+            val deleteX = x + width - deleteBtnSize - 3
+            val deleteY = currentY + (itemHeight - deleteBtnSize) / 2
+            val isHoverDelete =
+                i >= deleteX && i <= deleteX + deleteBtnSize && j >= deleteY && j <= deleteY + deleteBtnSize
+
+            // 削除ボタンの背景
+            val deleteColor = if (isHoverDelete) colorScheme.accentColor else colorScheme.secondaryColor
+            guiGraphics.fill(deleteX, deleteY, deleteX + deleteBtnSize, deleteY + deleteBtnSize, deleteColor)
+
+            // 削除ボタンの「×」文字
+            val cross = "×"
             guiGraphics.drawString(
                 font,
-                property.elementToString(item),
-                x + 5,
-                currentY + 5,
+                cross,
+                deleteX + (deleteBtnSize - font.width(cross)) / 2 + 1,
+                deleteY + (deleteBtnSize - 8) / 2,
                 colorScheme.foregroundColor,
+                false,
             )
-            guiGraphics.drawString(font, "×", x + width - 15, currentY + 5, colorScheme.accentColor)
 
             currentY += itemHeight
         }
 
         activeInputWidget?.render(guiGraphics, i, j, f)
 
-        // 追加ボタンの描画
+        // 追加ボタンのデザインも統一
         if (activeInputWidget == null || editingIndex != -1) {
             val isHoverAdd = i >= x && i <= x + width && j >= currentY && j <= currentY + 20
-            val color = if (isHoverAdd) colorScheme.accentColor else colorScheme.secondaryColor
-            guiGraphics.fill(x, currentY, x + width, (currentY + 20), color)
+            val addBgColor = if (isHoverAdd) colorScheme.accentColor else colorScheme.secondaryColor
+            guiGraphics.fill(x, currentY, x + width, currentY + 20, addBgColor)
+            val addText = "+ Add Item"
             guiGraphics.drawString(
                 font,
-                "+ Add",
-                x + (width - font.width("+ Add")) / 2,
-                currentY + 5,
+                addText,
+                x + (width - font.width(addText)) / 2,
+                currentY + 6,
                 colorScheme.foregroundColor,
+                false,
             )
         }
     }
